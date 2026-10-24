@@ -90,10 +90,16 @@ function download(text, type, extension) {
 }
 $('comparison-form').addEventListener('submit', event => { event.preventDefault(); compare(); });
 for (const id of ['before-signal', 'after-signal']) $(id).addEventListener('input', invalidateSignals);
-$('audit-workspace').addEventListener('input', event => {
-  if (!['before-signal', 'after-signal'].includes(event.target.id)) readiness();
-});
-$('audit-workspace').addEventListener('change', readiness);
+const contextInputIds = new Set([...Object.values(contextFields), 'before-time', 'after-time']);
+function handleReviewEdit(event) {
+  if (contextInputIds.has(event.target.id)) {
+    for (const check of CHECKS) $(`decision-${check.id}`).value = 'needs-review';
+    $('comparison-status').textContent = 'Audit context changed. Decisions reset to Needs review; existing notes and signal differences are retained for rechecking.';
+  }
+  readiness();
+}
+$('audit-workspace').addEventListener('input', handleReviewEdit);
+$('audit-workspace').addEventListener('change', handleReviewEdit);
 for (const [id, kind] of [['export-audit', 'json'], ['export-markdown', 'md']]) $(id).addEventListener('click', () => {
   if (!comparisonReady) return;
   try { const audit = collect(); download(kind === 'json' ? JSON.stringify(audit, null, 2) : auditMarkdown(audit), kind === 'json' ? 'application/json' : 'text/markdown;charset=utf-8', kind); }
