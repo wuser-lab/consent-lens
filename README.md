@@ -1,6 +1,19 @@
 # Consent Lens
 
-A browser-based TCF v2 consent-string inspector. Paste a signal to see CMP metadata, policy and vendor-list versions, timestamps, purpose flags, vendor IDs, and technical observations. Export the displayed report as JSON.
+A browser-based TCF v2 evidence review workspace. Compare consent strings before and after a user action, record evidence references, document reviewer decisions, and export a traceable report. Single-string inspection remains available in a separate mode.
+
+## Review workflow
+
+1. Paste before and after TCF v2 signals and enter their capture times in your local timezone.
+2. Select **Compare signals** to see added and removed purpose, vendor, legitimate-interest, and special-feature flags, plus metadata differences.
+3. Record the case ID, reviewer, website/app source, participant type, user action, and exact controls/reference version.
+4. Add an evidence index with references to screenshots or request logs, capture method, and known limitations.
+5. Review each technical prompt with **Needs review**, **Pass**, **Fail**, or **Skipped**. Completed decisions require a rationale; pass/fail decisions also require evidence references.
+6. Download JSON or a readable Markdown report. Missing context or unfinished decisions keep the report in **draft** state. Skipped checks remain explicitly skipped, and failures remain findings.
+
+Editing either signal clears the comparison, disables export, and resets decisions to **Needs review**. Existing notes remain visible for rechecking. Switching modes retains in-memory entries. Reloading or closing the page loses them; export before leaving. Exported capture times are normalized to UTC and include the browser timezone.
+
+**Load synthetic example** demonstrates purpose consent IDs 1 and 2 being added. The fixtures were generated using the IAB encoder and an empty synthetic vendor list, with illustrative CMP metadata. They are not real audit evidence and leave the review incomplete. Loading the example over existing work asks before replacing entries.
 
 ## Run
 
@@ -11,7 +24,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open the local address printed by Vite. Use **Try an example** to inspect a historical sample with no consent flags set.
+Open the local address printed by Vite. Use **Load synthetic example** for a comparison, or switch to **Inspect one string** and choose **Try an example** for a historical single-string sample.
 
 ```sh
 pnpm test
@@ -29,6 +42,14 @@ The build produces a static site in `dist/`.
 - Shows vendor IDs without fetching vendor names or declarations.
 - Does not validate every structural or policy requirement, determine lawful processing, or certify legal compliance.
 - Export is a selected-field report, not a complete serialization of every segment or publisher restriction.
+- Comparison covers five signal groups and the displayed metadata. It does not compare publisher restrictions, disclosed/allowed vendor segments, or every other TCF field.
+- Review prompts are general technical prompts, not official IAB control numbers. There is no automatic application of enforcement deadlines or a Controls Catalogue.
+- Evidence entries are references and notes. Files are not embedded, fetched, or verified.
+- Review completion describes documentation completeness, not compliance certification or independent evidence verification.
+
+## Validation
+
+`pnpm test` covers decoding, malformed inputs, exact additions/removals, identical captures, capture-specific errors, draft/completed report states, evidence requirements, skipped checks, recorded failures, chronology, and readable exports. `pnpm build` checks the production bundle.
 
 ## Sources
 
@@ -38,6 +59,6 @@ The build produces a static site in `dist/`.
 
 ## Next steps
 
-Add policy-aware purpose descriptions, vendor-list lookup with version matching, GPP support, and string-to-string comparison.
+Validate the workflow with an anonymised real audit, then consider version-matched vendor-list lookup, evidence-file packaging, policy-aware purpose descriptions, GPP support, and reviewed mappings to official controls.
 
 Independent learning project; not affiliated with IAB Europe, IAB Tech Lab, or Heinz Baumann.
