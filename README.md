@@ -53,6 +53,18 @@ Capture times are displayed in the current browser timezone. Unedited imported t
 
 **Load synthetic example** demonstrates purpose consent IDs 1 and 2 being added. The fixtures were generated using the IAB encoder and an empty synthetic vendor list, with illustrative CMP metadata. They are not real audit evidence and leave the review incomplete. Loading the example over existing work asks before replacing entries.
 
+## Version-matched vendor lookup
+
+Use **Vendor lookup** to choose a local Global Vendor List JSON file (up to 16 MiB), then select the before capture, after capture, or single-string input. Vendor names and membership are shown only if both the GVL version and policy version match the decoded signal. A mismatch blocks lookup; use the matching archived list from your organisation's trusted source.
+
+The table includes all referenced consent, legitimate-interest, disclosed, and allowed vendor IDs, along with supplied names and any recorded deletion date. Filter by name or ID; the interface shows up to 200 matching rows while the separate JSON download contains all referenced IDs. The download records list metadata, source filename and a SHA-256 file fingerprint where available. A fingerprint identifies file contents; it does not authenticate the source.
+
+**Try synthetic lookup** demonstrates listed, deleted, and unlisted entries with made-up vendor names. It replaces the loaded list and single-string input after confirmation if needed, while retaining audit captures and notes. Vendor lookup results are separate from saved audit reports and must be exported separately. Signals, files and notes are never sent to a remote service.
+
+![Synthetic vendor lookup showing names, encoded signals, deletion dates, and an unlisted ID](docs/screenshots/vendor-lookup.png)
+
+The tool validates the fields it uses for lookup, not the full GVL schema. It does not evaluate vendor declarations, permitted legal bases or legal compliance. A matching version does not prove the supplied list is authentic or complete; a not-listed ID is an observation for review.
+
 ## Run
 
 Requires Node.js 22.22.2+ within the Node 22 release line, or Node.js 24.15+, and pnpm. The test tooling uses jsdom; GitHub checks run on Node 24.
@@ -77,7 +89,7 @@ The build produces a static site in `dist/`.
 - Processes pasted strings in the browser; no analytics, external fonts, uploads, or persistence.
 - Supports standalone TCF v2 strings. GPP decoding is not implemented.
 - Displays all 24 encoded purpose bit positions; their applicability depends on policy version.
-- Shows vendor IDs without fetching vendor names or declarations.
+- The audit report shows vendor IDs. A separate optional lookup resolves names from a user-selected matching GVL file; no vendor list is fetched automatically.
 - Does not validate every structural or policy requirement, determine lawful processing, or certify legal compliance.
 - Export is a selected-field report, not a complete serialization of every segment or publisher restriction.
 - Comparison covers seven signal groups, including disclosed and allowed vendor IDs, and the displayed metadata. A missing optional segment is shown as absent, not as an empty list. Optional segment ID differences are calculated only when the segment is present in both captures. Publisher restrictions and other undisplayed fields remain outside the comparison.
@@ -97,6 +109,6 @@ The build produces a static site in `dist/`.
 
 ## Next steps
 
-Validate the workflow with an anonymised real audit, then consider version-matched vendor-list lookup, evidence-file packaging, policy-aware purpose descriptions, GPP support, and reviewed mappings to official controls.
+Validate the workflow with an anonymised real audit, then consider evidence-file packaging, policy-aware purpose descriptions, GPP support, and reviewed mappings to official controls.
 
 Independent learning project;

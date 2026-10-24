@@ -1,5 +1,6 @@
 import './style.css';
 import './audit-ui.js';
+import './vendor-ui.js';
 import { inspect, SAMPLE } from './decode.js';
 const $ = (id) => document.getElementById(id);
 let report;

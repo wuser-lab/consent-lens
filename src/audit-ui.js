@@ -140,6 +140,7 @@ $('import-report').addEventListener('change', async event => {
     editRevision++;
     $('compare-tab').click();
     compare();
+    document.dispatchEvent(new window.Event('consent-captures-changed'));
     $('import-status').textContent = 'Report reopened. Signals re-decoded; recorded decisions and notes restored. Imported evidence and decisions are not independently verified.';
   } catch (error) {
     $('import-status').textContent = `Report not imported: ${error.message} Current review retained.`;
@@ -167,6 +168,7 @@ $('comparison-sample').addEventListener('click', () => {
   $('before-time').value = ''; $('after-time').value = '';
   for (const check of CHECKS) { $(`decision-${check.id}`).value = 'needs-review'; $(`rationale-${check.id}`).value = ''; $(`evidence-${check.id}`).value = ''; }
   compare();
+  document.dispatchEvent(new window.Event('consent-captures-changed'));
 });
 for (const mode of ['compare', 'inspect']) $(`${mode}-tab`).addEventListener('click', () => {
   const comparing = mode === 'compare';

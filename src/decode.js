@@ -30,7 +30,7 @@ export function inspect(input) {
     vendorDisclosureSegmentPresent: segmentTypes.has(SegmentIDs.KEY_TO_ID[Segment.VENDORS_DISCLOSED]),
     vendorAllowedSegmentPresent: segmentTypes.has(SegmentIDs.KEY_TO_ID[Segment.VENDORS_ALLOWED]),
     specialFeatureOptinIds: ids(model.specialFeatureOptins),
-    notes: ['Vendor IDs are shown without names; this version does not fetch a Global Vendor List.', 'A successful decode does not validate all framework requirements.'],
+    notes: ['This decoded report contains vendor IDs only. Use the separate vendor lookup to resolve names against a local version-matched list.', 'A successful decode does not validate all framework requirements.'],
   };
   if (model.lastUpdated < model.created) report.notes.push('The last-updated timestamp precedes the creation timestamp.');
   if (model.created > new Date() || model.lastUpdated > new Date()) report.notes.push('The signal contains a future timestamp.');
