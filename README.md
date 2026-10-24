@@ -33,11 +33,13 @@ Record a decision, rationale, and evidence references for each review prompt.
 
 Editing either signal clears the comparison, disables export, and resets decisions to **Needs review**. Existing notes remain visible for rechecking. Switching modes retains in-memory entries. Reloading or closing the page loses them; export before leaving. Exported capture times are normalized to UTC and include the browser timezone.
 
+Editing audit context (including the source, action, capture times, reference version, or evidence index) also resets decisions to **Needs review**, while retaining notes and signal differences. This prevents an earlier decision from silently carrying over to revised evidence. Editing a decision's rationale or evidence references preserves its status.
+
 **Load synthetic example** demonstrates purpose consent IDs 1 and 2 being added. The fixtures were generated using the IAB encoder and an empty synthetic vendor list, with illustrative CMP metadata. They are not real audit evidence and leave the review incomplete. Loading the example over existing work asks before replacing entries.
 
 ## Run
 
-Requires Node.js 22.12+ and pnpm.
+Requires Node.js 22.22.2+ within the Node 22 release line, or Node.js 24.15+, and pnpm. The test tooling uses jsdom; GitHub checks run on Node 24.
 
 ```sh
 pnpm install --frozen-lockfile
