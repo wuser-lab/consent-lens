@@ -22,6 +22,12 @@ Record a decision, rationale, and evidence references for each review prompt.
 
 ![Reviewer workflow showing a needs-review decision and synthetic evidence notes](docs/screenshots/review.png)
 
+### Vendor disclosure comparison
+
+Compare disclosed and allowed vendor IDs, with explicit segment-presence reporting. This screenshot uses synthetic segments and does not represent a real audit.
+
+![Disclosed vendor comparison showing vendor 8 added and vendor 2 removed](docs/screenshots/vendor-disclosures.png)
+
 ## Review workflow
 
 1. Paste before and after TCF v2 signals and enter their capture times in your local timezone.
@@ -64,7 +70,7 @@ The build produces a static site in `dist/`.
 - Shows vendor IDs without fetching vendor names or declarations.
 - Does not validate every structural or policy requirement, determine lawful processing, or certify legal compliance.
 - Export is a selected-field report, not a complete serialization of every segment or publisher restriction.
-- Comparison covers five signal groups and the displayed metadata. It does not compare publisher restrictions, disclosed/allowed vendor segments, or every other TCF field.
+- Comparison covers seven signal groups, including disclosed and allowed vendor IDs, and the displayed metadata. A missing optional segment is shown as absent, not as an empty list. Optional segment ID differences are calculated only when the segment is present in both captures. Publisher restrictions and other undisplayed fields remain outside the comparison.
 - Review prompts are general technical prompts, not official IAB control numbers. There is no automatic application of enforcement deadlines or a Controls Catalogue.
 - Evidence entries are references and notes. Files are not embedded, fetched, or verified.
 - Review completion describes documentation completeness, not compliance certification or independent evidence verification.

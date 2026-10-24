@@ -6,12 +6,16 @@ export const GROUPS = {
   vendorConsentIds: 'Vendor consent',
   vendorLegitimateInterestIds: 'Vendor legitimate interest',
   specialFeatureOptinIds: 'Special feature opt-ins',
+  vendorDisclosedIds: 'Disclosed vendor IDs',
+  vendorAllowedIds: 'Allowed vendor IDs',
 };
 export const FIELDS = {
   version: 'TCF encoding version', policyVersion: 'Policy version', cmpId: 'CMP ID',
   cmpVersion: 'CMP version', vendorListVersion: 'Vendor list version',
   language: 'Language', created: 'Created (UTC)', updated: 'Updated (UTC)',
   serviceSpecific: 'Service specific',
+  vendorDisclosureSegmentPresent: 'Disclosed-vendor segment present',
+  vendorAllowedSegmentPresent: 'Allowed-vendor segment present',
 };
 export const CHECKS = [
   { id: 'capture', title: 'Capture context', description: 'Confirm the source, capture times, and user action for both signals.' },
@@ -26,9 +30,15 @@ export function compareSignals(beforeInput, afterInput) {
   try { before = inspect(beforeInput); } catch (error) { throw new Error(`Before: ${error.message}`); }
   try { after = inspect(afterInput); } catch (error) { throw new Error(`After: ${error.message}`); }
   const groups = Object.entries(GROUPS).map(([key, label]) => {
+    const presenceKey = { vendorDisclosedIds: 'vendorDisclosureSegmentPresent', vendorAllowedIds: 'vendorAllowedSegmentPresent' }[key];
+    const comparable = !presenceKey || (before[presenceKey] && after[presenceKey]);
     const previous = new Set(before[key]);
     const current = new Set(after[key]);
-    return { key, label, added: [...current].filter(id => !previous.has(id)), removed: [...previous].filter(id => !current.has(id)), unchangedCount: [...current].filter(id => previous.has(id)).length };
+    return { key, label, comparable,
+      ...(presenceKey ? { beforeSegmentPresent: before[presenceKey], afterSegmentPresent: after[presenceKey], beforeCount: before[presenceKey] ? previous.size : null, afterCount: after[presenceKey] ? current.size : null } : {}),
+      added: comparable ? [...current].filter(id => !previous.has(id)) : [],
+      removed: comparable ? [...previous].filter(id => !current.has(id)) : [],
+      unchangedCount: comparable ? [...current].filter(id => previous.has(id)).length : null };
   });
   const metadata = Object.entries(FIELDS).map(([key, label]) => ({ key, label, before: before[key], after: after[key], changed: before[key] !== after[key] }));
   return { before, after, groups, metadata, rawStringsEqual: beforeInput.trim() === afterInput.trim(), totalFlagChanges: groups.reduce((sum, group) => sum + group.added.length + group.removed.length, 0) };
@@ -64,7 +74,7 @@ export function buildAudit({ before, after, context, checks, now = new Date() })
     limitations: [
       'Reviewer-defined technical review, not an official IAB Controls Catalogue assessment or legal compliance verdict.',
       'No vendor-list, domain-ownership, network-traffic, screenshot-content, or evidence-link validation.',
-      'Diff covers the displayed metadata and five signal groups, not every TCF field or publisher restriction.',
+      'Diff covers the displayed metadata and seven signal groups, not every TCF field or publisher restriction. Optional segment IDs are compared only when that segment is present in both captures.',
       'Evidence entries are references and notes; linked files are not embedded in this report.',
       'Decoded flags alone do not establish permission to process personal data.',
     ],
@@ -76,7 +86,10 @@ export function auditMarkdown(audit) {
   const lines = ['# Consent Lens — technical review', '', `Exported: ${audit.exportedAt}`, `State: ${audit.reviewState}`, `Outcome: ${audit.outcome}`, '', '## Context', ''];
   for (const [key, value] of Object.entries(audit.context)) lines.push(`- ${key}: ${safe(value) || 'Not recorded'}`);
   lines.push('', '## Signal changes', '');
-  for (const group of audit.comparison.groups) lines.push(`- ${group.label}: added ${group.added.join(', ') || 'none'}; removed ${group.removed.join(', ') || 'none'}; unchanged ${group.unchangedCount}.`);
+  for (const group of audit.comparison.groups) {
+    if (group.comparable) lines.push(`- ${group.label}: added ${group.added.join(', ') || 'none'}; removed ${group.removed.join(', ') || 'none'}; unchanged ${group.unchangedCount}.`);
+    else lines.push(`- ${group.label}: not compared because a segment is absent. Before: ${group.beforeSegmentPresent ? `present (${group.beforeCount} IDs)` : 'absent'}; after: ${group.afterSegmentPresent ? `present (${group.afterCount} IDs)` : 'absent'}.`);
+  }
   lines.push('', '## Metadata', '');
   for (const field of audit.comparison.metadata) lines.push(`- ${field.label}: ${safe(field.before)} → ${safe(field.after)}${field.changed ? ' (changed)' : ''}`);
   lines.push('', '## Reviewer decisions', '');
