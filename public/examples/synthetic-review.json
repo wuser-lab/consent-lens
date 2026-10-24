@@ -1,0 +1,276 @@
+{
+  "schemaVersion": "1.0",
+  "tool": "Consent Lens",
+  "exportedAt": "2026-10-24T08:02:00.000Z",
+  "reviewState": "draft",
+  "outcome": "incomplete",
+  "context": {
+    "caseId": "SYNTHETIC-REOPEN-DEMO",
+    "reviewer": "",
+    "source": "Synthetic signals generated with the IAB encoder; no real site or CMP",
+    "participantType": "Other",
+    "action": "Synthetic addition of purpose consent flags 1 and 2",
+    "controlsVersion": "Exploratory technical review; no official controls applied",
+    "evidenceNotes": "Demonstration only. No real user action or screenshots were captured.",
+    "beforeCapturedAt": "2026-10-24T08:00:00.000Z",
+    "afterCapturedAt": "2026-10-24T08:01:00.000Z",
+    "captureTimeZone": "Europe/Brussels"
+  },
+  "captures": {
+    "before": "CQsm_cAQsm_cAACABAENABFgAAAAAAAAAAAAAAAAAAAA.IAAA.YAAAAAAAAAAA",
+    "after": "CQsm_cAQsm_lYACABAENABFgAMAAAAAAAAAAAAAAAAAA.IAAA.YAAAAAAAAAAA"
+  },
+  "comparison": {
+    "before": {
+      "version": 2,
+      "policyVersion": 5,
+      "cmpId": 2,
+      "cmpVersion": 1,
+      "vendorListVersion": 1,
+      "language": "EN",
+      "created": "2026-10-24T08:00:00.000Z",
+      "updated": "2026-10-24T08:00:00.000Z",
+      "serviceSpecific": true,
+      "purposeConsentIds": [],
+      "purposeLegitimateInterestIds": [],
+      "vendorConsentIds": [],
+      "vendorLegitimateInterestIds": [],
+      "vendorDisclosedIds": [],
+      "vendorAllowedIds": [],
+      "vendorDisclosureSegmentPresent": true,
+      "vendorAllowedSegmentPresent": false,
+      "specialFeatureOptinIds": [],
+      "notes": [
+        "Vendor IDs are shown without names; this version does not fetch a Global Vendor List.",
+        "A successful decode does not validate all framework requirements.",
+        "No vendor consent flags are set. Other legal-basis signals must be considered separately."
+      ]
+    },
+    "after": {
+      "version": 2,
+      "policyVersion": 5,
+      "cmpId": 2,
+      "cmpVersion": 1,
+      "vendorListVersion": 1,
+      "language": "EN",
+      "created": "2026-10-24T08:00:00.000Z",
+      "updated": "2026-10-24T08:01:00.000Z",
+      "serviceSpecific": true,
+      "purposeConsentIds": [
+        1,
+        2
+      ],
+      "purposeLegitimateInterestIds": [],
+      "vendorConsentIds": [],
+      "vendorLegitimateInterestIds": [],
+      "vendorDisclosedIds": [],
+      "vendorAllowedIds": [],
+      "vendorDisclosureSegmentPresent": true,
+      "vendorAllowedSegmentPresent": false,
+      "specialFeatureOptinIds": [],
+      "notes": [
+        "Vendor IDs are shown without names; this version does not fetch a Global Vendor List.",
+        "A successful decode does not validate all framework requirements.",
+        "No vendor consent flags are set. Other legal-basis signals must be considered separately."
+      ]
+    },
+    "groups": [
+      {
+        "key": "purposeConsentIds",
+        "label": "Purpose consent",
+        "comparable": true,
+        "added": [
+          1,
+          2
+        ],
+        "removed": [],
+        "unchangedCount": 0
+      },
+      {
+        "key": "purposeLegitimateInterestIds",
+        "label": "Purpose legitimate interest",
+        "comparable": true,
+        "added": [],
+        "removed": [],
+        "unchangedCount": 0
+      },
+      {
+        "key": "vendorConsentIds",
+        "label": "Vendor consent",
+        "comparable": true,
+        "added": [],
+        "removed": [],
+        "unchangedCount": 0
+      },
+      {
+        "key": "vendorLegitimateInterestIds",
+        "label": "Vendor legitimate interest",
+        "comparable": true,
+        "added": [],
+        "removed": [],
+        "unchangedCount": 0
+      },
+      {
+        "key": "specialFeatureOptinIds",
+        "label": "Special feature opt-ins",
+        "comparable": true,
+        "added": [],
+        "removed": [],
+        "unchangedCount": 0
+      },
+      {
+        "key": "vendorDisclosedIds",
+        "label": "Disclosed vendor IDs",
+        "comparable": true,
+        "beforeSegmentPresent": true,
+        "afterSegmentPresent": true,
+        "beforeCount": 0,
+        "afterCount": 0,
+        "added": [],
+        "removed": [],
+        "unchangedCount": 0
+      },
+      {
+        "key": "vendorAllowedIds",
+        "label": "Allowed vendor IDs",
+        "comparable": false,
+        "beforeSegmentPresent": false,
+        "afterSegmentPresent": false,
+        "beforeCount": null,
+        "afterCount": null,
+        "added": [],
+        "removed": [],
+        "unchangedCount": null
+      }
+    ],
+    "metadata": [
+      {
+        "key": "version",
+        "label": "TCF encoding version",
+        "before": 2,
+        "after": 2,
+        "changed": false
+      },
+      {
+        "key": "policyVersion",
+        "label": "Policy version",
+        "before": 5,
+        "after": 5,
+        "changed": false
+      },
+      {
+        "key": "cmpId",
+        "label": "CMP ID",
+        "before": 2,
+        "after": 2,
+        "changed": false
+      },
+      {
+        "key": "cmpVersion",
+        "label": "CMP version",
+        "before": 1,
+        "after": 1,
+        "changed": false
+      },
+      {
+        "key": "vendorListVersion",
+        "label": "Vendor list version",
+        "before": 1,
+        "after": 1,
+        "changed": false
+      },
+      {
+        "key": "language",
+        "label": "Language",
+        "before": "EN",
+        "after": "EN",
+        "changed": false
+      },
+      {
+        "key": "created",
+        "label": "Created (UTC)",
+        "before": "2026-10-24T08:00:00.000Z",
+        "after": "2026-10-24T08:00:00.000Z",
+        "changed": false
+      },
+      {
+        "key": "updated",
+        "label": "Updated (UTC)",
+        "before": "2026-10-24T08:00:00.000Z",
+        "after": "2026-10-24T08:01:00.000Z",
+        "changed": true
+      },
+      {
+        "key": "serviceSpecific",
+        "label": "Service specific",
+        "before": true,
+        "after": true,
+        "changed": false
+      },
+      {
+        "key": "vendorDisclosureSegmentPresent",
+        "label": "Disclosed-vendor segment present",
+        "before": true,
+        "after": true,
+        "changed": false
+      },
+      {
+        "key": "vendorAllowedSegmentPresent",
+        "label": "Allowed-vendor segment present",
+        "before": false,
+        "after": false,
+        "changed": false
+      }
+    ],
+    "rawStringsEqual": false,
+    "totalFlagChanges": 2
+  },
+  "checks": [
+    {
+      "id": "capture",
+      "title": "Capture context",
+      "description": "Confirm the source, capture times, and user action for both signals.",
+      "status": "needs-review",
+      "rationale": "",
+      "evidence": ""
+    },
+    {
+      "id": "signal",
+      "title": "Signal transition",
+      "description": "Review added and removed flags against the recorded user action and supporting evidence.",
+      "status": "needs-review",
+      "rationale": "",
+      "evidence": ""
+    },
+    {
+      "id": "metadata",
+      "title": "Metadata changes",
+      "description": "Review CMP, policy, vendor-list, language, and timestamp differences. Explain relevant differences.",
+      "status": "needs-review",
+      "rationale": "",
+      "evidence": ""
+    },
+    {
+      "id": "evidence",
+      "title": "Evidence coverage",
+      "description": "Confirm references support the finding. Record missing screenshots, network captures, or other limitations.",
+      "status": "needs-review",
+      "rationale": "",
+      "evidence": ""
+    }
+  ],
+  "outstanding": [
+    "Missing reviewer.",
+    "Capture context needs review.",
+    "Signal transition needs review.",
+    "Metadata changes needs review.",
+    "Evidence coverage needs review."
+  ],
+  "limitations": [
+    "Reviewer-defined technical review, not an official IAB Controls Catalogue assessment or legal compliance verdict.",
+    "No vendor-list, domain-ownership, network-traffic, screenshot-content, or evidence-link validation.",
+    "Diff covers the displayed metadata and seven signal groups, not every TCF field or publisher restriction. Optional segment IDs are compared only when that segment is present in both captures.",
+    "Evidence entries are references and notes; linked files are not embedded in this report.",
+    "Decoded flags alone do not establish permission to process personal data."
+  ]
+}

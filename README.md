@@ -41,6 +41,16 @@ Editing either signal clears the comparison, disables export, and resets decisio
 
 Editing audit context (including the source, action, capture times, reference version, or evidence index) also resets decisions to **Needs review**, while retaining notes and signal differences. This prevents an earlier decision from silently carrying over to revised evidence. Editing a decision's rationale or evidence references preserves its status.
 
+## Reopen a saved review
+
+Download your review as JSON, then use **Resume a saved review** to select that file later. The import restores source strings, capture times, context, decisions, rationales, and evidence references. A [synthetic sample report](public/examples/synthetic-review.json) is included for trying the workflow.
+
+![Resume a saved review by choosing an exported JSON report](docs/screenshots/resume-review.png)
+
+Reports are read locally with a 2 MiB size limit. The importer accepts Consent Lens schema `1.0`, including older reports without the newer derived disclosure fields. It re-decodes the source strings and recalculates comparison results and review completeness instead of trusting saved outcomes. Restored decisions remain the original reviewer's entries; import does not independently verify their evidence.
+
+Capture times are displayed in the current browser timezone. Unedited imported timestamps retain their exact UTC instants and milliseconds, including during the repeated hour when daylight saving time ends. Invalid files and cancelled replacements leave current work intact. There is still no automatic browser storage; export changes again before closing the page. Markdown reports are intended for reading and cannot be imported.
+
 **Load synthetic example** demonstrates purpose consent IDs 1 and 2 being added. The fixtures were generated using the IAB encoder and an empty synthetic vendor list, with illustrative CMP metadata. They are not real audit evidence and leave the review incomplete. Loading the example over existing work asks before replacing entries.
 
 ## Run

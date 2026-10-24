@@ -1,9 +1,12 @@
 import { CHECKS, compareSignals, buildAudit, auditMarkdown } from './review.js';
 import { EXAMPLE_BEFORE, EXAMPLE_AFTER } from './examples.js';
+import { parseAuditReport, MAX_REPORT_BYTES, localCaptureValue, captureInstant } from './import-report.js';
 
 const $ = id => document.getElementById(id);
 const contextFields = { caseId: 'case-id', reviewer: 'reviewer', source: 'source', participantType: 'participant-type', action: 'action', controlsVersion: 'controls-version', evidenceNotes: 'evidence-notes' };
 let comparisonReady = false;
+let editRevision = 0;
+const restoredCaptureTimes = new Map();
 function element(tag, text, className) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
@@ -28,8 +31,7 @@ for (const check of CHECKS) {
   $('review-checks').append(card);
 }
 function iso(id) {
-  const value = $(id).value;
-  return value ? new Date(value).toISOString() : '';
+  return captureInstant($(id).value, restoredCaptureTimes.get(id));
 }
 function collect() {
   const context = Object.fromEntries(Object.entries(contextFields).map(([key, id]) => [key, $(id).value.trim()]));
@@ -95,6 +97,8 @@ $('comparison-form').addEventListener('submit', event => { event.preventDefault(
 for (const id of ['before-signal', 'after-signal']) $(id).addEventListener('input', invalidateSignals);
 const contextInputIds = new Set([...Object.values(contextFields), 'before-time', 'after-time']);
 function handleReviewEdit(event) {
+  editRevision++;
+  if (['before-time', 'after-time'].includes(event.target.id)) restoredCaptureTimes.delete(event.target.id);
   if (contextInputIds.has(event.target.id)) {
     for (const check of CHECKS) $(`decision-${check.id}`).value = 'needs-review';
     $('comparison-status').textContent = 'Audit context changed. Decisions reset to Needs review; existing notes and signal differences are retained for rechecking.';
@@ -103,15 +107,56 @@ function handleReviewEdit(event) {
 }
 $('audit-workspace').addEventListener('input', handleReviewEdit);
 $('audit-workspace').addEventListener('change', handleReviewEdit);
+function hasWork() {
+  return Object.values(contextFields).some(id => id === 'participant-type' ? $(id).value !== 'unspecified' : $(id).value) || ['before-signal', 'after-signal', 'before-time', 'after-time'].some(id => $(id).value) || CHECKS.some(check => $(`rationale-${check.id}`).value || $(`evidence-${check.id}`).value || $(`decision-${check.id}`).value !== 'needs-review');
+}
+$('import-report').addEventListener('change', async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const revision = editRevision;
+  $('import-status').textContent = 'Reading report locally…';
+  try {
+    if (file.size > MAX_REPORT_BYTES) throw new Error('Report exceeds the 2 MiB import limit.');
+    const audit = parseAuditReport(await file.text());
+    if (revision !== editRevision) throw new Error('The review changed while the file was loading. Choose the report again when ready.');
+    if (hasWork() && !window.confirm('Replace the current review with this report? Export your current work first if you need it.')) {
+      $('import-status').textContent = 'Import cancelled. Current review retained.';
+      return;
+    }
+    $('before-signal').value = audit.captures.before;
+    $('after-signal').value = audit.captures.after;
+    for (const [key, id] of Object.entries(contextFields)) $(id).value = audit.context[key];
+    restoredCaptureTimes.clear();
+    for (const [id, key] of [['before-time', 'beforeCapturedAt'], ['after-time', 'afterCapturedAt']]) {
+      const iso = audit.context[key];
+      $(id).value = localCaptureValue(iso);
+      if (iso) restoredCaptureTimes.set(id, { display: $(id).value, iso });
+    }
+    for (const check of audit.checks) {
+      $(`decision-${check.id}`).value = check.status;
+      $(`rationale-${check.id}`).value = check.rationale;
+      $(`evidence-${check.id}`).value = check.evidence;
+    }
+    editRevision++;
+    $('compare-tab').click();
+    compare();
+    $('import-status').textContent = 'Report reopened. Signals re-decoded; recorded decisions and notes restored. Imported evidence and decisions are not independently verified.';
+  } catch (error) {
+    $('import-status').textContent = `Report not imported: ${error.message} Current review retained.`;
+  } finally { event.target.value = ''; }
+});
 for (const [id, kind] of [['export-audit', 'json'], ['export-markdown', 'md']]) $(id).addEventListener('click', () => {
   if (!comparisonReady) return;
   try { const audit = collect(); download(kind === 'json' ? JSON.stringify(audit, null, 2) : auditMarkdown(audit), kind === 'json' ? 'application/json' : 'text/markdown;charset=utf-8', kind); }
   catch (error) { $('report-readiness').textContent = error.message; }
 });
 $('comparison-sample').addEventListener('click', () => {
-  if (Object.values(contextFields).some(id => id !== 'participant-type' && $(id).value) || $('before-signal').value || $('after-signal').value || CHECKS.some(check => $(`rationale-${check.id}`).value || $(`evidence-${check.id}`).value || $(`decision-${check.id}`).value !== 'needs-review')) {
+  if (hasWork()) {
     if (!window.confirm('Replace the current captures, context, and review notes with a synthetic example? Export your current report first if you need it.')) return;
   }
+  editRevision++;
+  restoredCaptureTimes.clear();
+  $('import-status').textContent = '';
   $('before-signal').value = EXAMPLE_BEFORE; $('after-signal').value = EXAMPLE_AFTER;
   for (const id of Object.values(contextFields)) $(id).value = '';
   $('participant-type').value = 'Other';
