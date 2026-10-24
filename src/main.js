@@ -25,6 +25,8 @@ function run() {
     }
     $('vendors').textContent = report.vendorConsentIds.join(', ') || 'No flags set';
     $('interests').textContent = report.vendorLegitimateInterestIds.join(', ') || 'No flags set';
+    $('disclosed').textContent = report.vendorDisclosureSegmentPresent ? report.vendorDisclosedIds.join(', ') || 'Segment present · no vendor IDs set' : 'Segment absent';
+    $('allowed').textContent = report.vendorAllowedSegmentPresent ? report.vendorAllowedIds.join(', ') || 'Segment present · no vendor IDs set' : 'Segment absent';
     $('notes').replaceChildren(...report.notes.map(note => { const li = document.createElement('li'); li.textContent = note; return li; }));
     $('status').textContent = 'Decoded successfully. Purpose IDs 1–24 show the encoded bit positions; applicability depends on the policy version.';
     $('status').className = 'success'; $('results').hidden = false;

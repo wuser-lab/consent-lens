@@ -63,7 +63,10 @@ function compare() {
     $('diff-groups').replaceChildren();
     for (const group of comparison.groups) {
       const card = element('section', undefined, 'metric');
-      card.append(element('h3', group.label), element('p', `Added IDs: ${group.added.join(', ') || 'None'}`, 'added'), element('p', `Removed IDs: ${group.removed.join(', ') || 'None'}`, 'removed'), element('p', `Unchanged set flags: ${group.unchangedCount}`, 'hint'));
+      card.append(element('h3', group.label));
+      if ('beforeSegmentPresent' in group) card.append(element('p', `Before: ${group.beforeSegmentPresent ? `present · ${group.beforeCount} IDs` : 'segment absent'}`, 'hint'), element('p', `After: ${group.afterSegmentPresent ? `present · ${group.afterCount} IDs` : 'segment absent'}`, 'hint'));
+      if (group.comparable) card.append(element('p', `Added IDs: ${group.added.join(', ') || 'None'}`, 'added'), element('p', `Removed IDs: ${group.removed.join(', ') || 'None'}`, 'removed'), element('p', `Unchanged set flags: ${group.unchangedCount}`, 'hint'));
+      else card.append(element('p', 'IDs not compared: a segment is absent.'));
       $('diff-groups').append(card);
     }
     $('metadata-diff').replaceChildren(...comparison.metadata.map(item => {
@@ -71,7 +74,7 @@ function compare() {
       row.append(element('th', item.label), element('td', String(item.before)), element('td', String(item.after))); return row;
     }));
     $('change-count').textContent = `${comparison.totalFlagChanges} flag changes`;
-    $('comparison-caveat').textContent = comparison.rawStringsEqual ? 'The input strings are identical. No signal changes were observed.' : 'Comparison covers the five signal groups and metadata below. Other TCF fields and publisher restrictions are outside this comparison.';
+    $('comparison-caveat').textContent = comparison.rawStringsEqual ? 'The input strings are identical. Optional segment IDs are compared only when present in both captures.' : 'Comparison covers seven signal groups and the metadata below. Optional segment IDs are compared only when present in both captures; publisher restrictions remain outside this comparison.';
     $('comparison-status').className = 'success'; $('comparison-status').textContent = 'Both signals decoded. Changes are observations; review their meaning against your evidence.';
     $('comparison-results').hidden = false; comparisonReady = true;
   } catch (error) { $('comparison-status').className = 'error'; $('comparison-status').textContent = error.message; }
