@@ -2,6 +2,26 @@
 
 A browser-based TCF v2 evidence review workspace. Compare consent strings before and after a user action, record evidence references, document reviewer decisions, and export a traceable report. Single-string inspection remains available in a separate mode.
 
+## Screenshots
+
+The screens below use synthetic demonstration data, not real audit evidence.
+
+### Review workspace
+
+![Consent Lens workspace with before and after capture inputs](docs/screenshots/workspace.png)
+
+### Signal comparison
+
+See added and removed consent flags alongside metadata differences.
+
+![Signal comparison showing purpose consent IDs 1 and 2 added](docs/screenshots/comparison.png)
+
+### Reviewer decisions
+
+Record a decision, rationale, and evidence references for each review prompt.
+
+![Reviewer workflow showing a needs-review decision and synthetic evidence notes](docs/screenshots/review.png)
+
 ## Review workflow
 
 1. Paste before and after TCF v2 signals and enter their capture times in your local timezone.
