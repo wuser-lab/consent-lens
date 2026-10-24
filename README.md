@@ -81,4 +81,4 @@ The build produces a static site in `dist/`.
 
 Validate the workflow with an anonymised real audit, then consider version-matched vendor-list lookup, evidence-file packaging, policy-aware purpose descriptions, GPP support, and reviewed mappings to official controls.
 
-Independent learning project; not affiliated with IAB Europe, IAB Tech Lab, or Heinz Baumann.
+Independent learning project;
