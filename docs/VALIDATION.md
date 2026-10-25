@@ -1,6 +1,18 @@
 # Release validation
 
-This records technical evidence for the 0.2.0 release. It does not establish legal compliance, production adoption, or time saved in real audits.
+This records technical evidence for the 0.2.0 and 0.3.0 releases. It does not establish legal compliance, production adoption, or time saved in real audits.
+
+## Publisher restrictions (0.3.0)
+
+Independent bit-level synthetic fixtures reproduce the coverage gap: changing an encoded restriction type leaves every consent flag and metadata field unchanged. The new comparison reports the vendor-purpose change separately. Tests cover all three types, empty sections, added/removed/changed/unchanged pairs, reversed comparisons, equivalent ranges and individual IDs, duplicates, ordering, maximum vendor ID, and multiple encoded types on the same pair.
+
+JSON and readable exports retain the exact before/after types. Reopening re-decodes the source captures instead of trusting saved differences. Older comparison coverage resets the signal-transition decision and retains notes/evidence. UI tests verify that edits and failed comparisons remove stale rows and disable export, and that only the first 200 changes are rendered.
+
+Restriction expansion has a separate 10,000-step per-input processing cap, including overlaps and duplicates, enforced before library decoding. The report size ceiling is 32 MiB for both import and export. These are resource bounds, not validity rules. No GVL is attached to the decoded model or used to remove encoded restriction evidence.
+
+The production build was reopened through the actual browser file picker with the synthetic restriction-only report. The screen showed zero flag changes and three restriction changes. Both JSON and Markdown downloads preserved the exact before/after types; JSON retained the original source captures and capture instants. All 67 automated tests pass.
+
+The downloadable report is synthetic. Real-audit adoption and time saved remain unmeasured.
 
 ## Published TCF example
 
@@ -25,9 +37,9 @@ The downloaded public file was parsed locally. Its list version 48 and policy ve
 
 ## Decoder workload limit
 
-A 22,573-character constructed signal with 4,095 overlapping full-ID ranges could request about 268 million vendor-vector writes from the upstream decoder. The preflight now rejects this input before invoking that decoder. Tests cover core vectors, disclosed and allowed segments, publisher restrictions, repeated segments, truncation, and supported overlapping ranges below the limit. All 50 automated tests pass.
+A 22,573-character constructed signal with 4,095 overlapping full-ID ranges could request about 268 million vendor-vector writes from the upstream decoder. The preflight now rejects this input before invoking that decoder. Tests cover core vectors, disclosed and allowed segments, publisher restrictions, repeated segments, truncation, and supported overlapping ranges below the limit. All 50 original automated tests passed for 0.2.0; the 0.3.0 suite has 67 passing tests.
 
-The per-input budget is 1,000,000 vendor-ID expansion/scan steps, with a 100,000-character cap. This bounds the counted work; it is not a wall-clock timeout or a framework validity rule. The preflight follows the pinned library layouts and needs review when that dependency changes.
+The per-input budget is 1,000,000 vendor-ID expansion/scan steps, with a 100,000-character cap. Release 0.3.0 additionally caps publisher-restriction expansion at 10,000 steps. This bounds the counted work; it is not a wall-clock timeout or a framework validity rule. The preflight follows the pinned library layouts and needs review when that dependency changes.
 
 ## Practical limits
 

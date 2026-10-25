@@ -1,6 +1,8 @@
 import { buildAudit, CHECKS, STATUSES } from './review.js';
+import { RESTRICTION_COVERAGE } from './restrictions.js';
+import { assertReportSize } from './report-limits.js';
 
-export const MAX_REPORT_BYTES = 2 * 1024 * 1024;
+export { MAX_REPORT_BYTES } from './report-limits.js';
 const CONTEXT_LIMITS = { caseId: 200, reviewer: 200, source: 2000, participantType: 100, action: 1000, controlsVersion: 500, evidenceNotes: 20000, captureTimeZone: 200 };
 const PARTICIPANTS = ['unspecified', 'Web CMP', 'Native mobile CMP', 'Web vendor', 'Native mobile vendor', 'Other'];
 function object(value, name) {
@@ -22,7 +24,7 @@ function timestamp(value, name) {
 }
 
 export function parseAuditReport(source) {
-  if (typeof source !== 'string' || source.length > MAX_REPORT_BYTES || new TextEncoder().encode(source).length > MAX_REPORT_BYTES) throw new Error('Report exceeds the 2 MiB import limit.');
+  assertReportSize(source);
   let data;
   try { data = JSON.parse(source); } catch { throw new Error('This file is not valid JSON. Choose a Consent Lens JSON report.'); }
   object(data, 'report');
@@ -45,7 +47,11 @@ export function parseAuditReport(source) {
     return { id: definition.id, status: check.status, rationale: text(check.rationale, 'rationale', 10000, true), evidence: text(check.evidence, 'evidence', 4000, true) };
   });
   // Ignore imported outcomes and decoded data: rebuild everything from captures.
-  return buildAudit({ before, after, context, checks });
+  const legacyCoverage = data.comparisonCoverage !== RESTRICTION_COVERAGE;
+  if (legacyCoverage) checks.find(check => check.id === 'signal').status = 'needs-review';
+  const audit = buildAudit({ before, after, context, checks });
+  if (legacyCoverage) audit.importWarnings = ['This report predates publisher-restriction comparison or has no matching coverage marker. Signal transition was reset to Needs review; existing notes and evidence references were retained.'];
+  return audit;
 }
 
 export function localCaptureValue(iso) {

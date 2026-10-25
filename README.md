@@ -35,7 +35,7 @@ Compare disclosed and allowed vendor IDs, with explicit segment-presence reporti
 ## Review workflow
 
 1. Paste before and after TCF v2 signals and enter their capture times in your local timezone.
-2. Select **Compare signals** to see added and removed purpose, vendor, legitimate-interest, and special-feature flags, plus metadata differences.
+2. Select **Compare signals** to see added and removed purpose, vendor, legitimate-interest, and special-feature flags, plus publisher-restriction and metadata differences.
 3. Record the case ID, reviewer, website/app source, participant type, user action, and exact controls/reference version.
 4. Add an evidence index with references to screenshots or request logs, capture method, and known limitations.
 5. Review each technical prompt with **Needs review**, **Pass**, **Fail**, or **Skipped**. Completed decisions require a rationale; pass/fail decisions also require evidence references.
@@ -45,13 +45,25 @@ Editing either signal clears the comparison, disables export, and resets decisio
 
 Editing audit context (including the source, action, capture times, reference version, or evidence index) also resets decisions to **Needs review**, while retaining notes and signal differences. This prevents an earlier decision from silently carrying over to revised evidence. Editing a decision's rationale or evidence references preserves its status.
 
+## Publisher-restriction comparison
+
+The comparison also shows restrictions for each vendor and purpose: **Not allowed** (encoded type 0), **Require consent** (1), and **Require legitimate interest** (2). Added, removed, and changed restrictions have separate counts from consent flags. A change in the type for one vendor-purpose pair counts once; unchanged pairs are counted separately.
+
+Rows are sorted by purpose and vendor ID. Reordered groups, ranges, repeated entries and individual IDs with the same decoded meaning do not create false changes. Multiple encoded types for one pair remain visible together; the tool does not select a winning type. **No encoded restriction** means none was recorded for that pair and does not establish permission to process. Vendor declarations and policy applicability need separate review. These are the [restriction values defined by the IAB technical format](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20Consent%20string%20and%20vendor%20list%20formats%20v2.md#what-are-publisher-restrictions).
+
+The screen shows up to 200 changed pairs; JSON and Markdown exports include the complete difference table; JSON also includes the decoded captures. Download the [synthetic restriction-only report](public/examples/synthetic-restrictions.json), then reopen it with **Resume a saved review** to see **0 flag changes · 3 restriction changes**. It is demonstration data, not real audit evidence.
+
+![Synthetic publisher-restriction comparison with one change, one removal, and one addition](docs/screenshots/publisher-restrictions.png)
+
+Reports now include a comparison-coverage marker. Reopening an older report without the matching marker recalculates the restrictions and resets **Signal transition** to **Needs review**, retaining its rationale and evidence references. Other recorded decisions are preserved. A visible notice explains the reset. The marker records comparison coverage, not independent evidence verification.
+
 ## Reopen a saved review
 
 Download your review as JSON, then use **Resume a saved review** to select that file later. The import restores source strings, capture times, context, decisions, rationales, and evidence references. A [synthetic sample report](public/examples/synthetic-review.json) is included for trying the workflow.
 
 ![Resume a saved review by choosing an exported JSON report](docs/screenshots/resume-review.png)
 
-Reports are read locally with a 2 MiB size limit. The importer accepts Consent Lens schema `1.0`, including older reports without the newer derived disclosure fields. It re-decodes the source strings and recalculates comparison results and review completeness instead of trusting saved outcomes. Restored decisions remain the original reviewer's entries; import does not independently verify their evidence.
+Reports are read locally with a 32 MiB size limit. Downloads over the same size are blocked before saving. The importer accepts Consent Lens schema `1.0`, including older reports without the newer derived disclosure fields. It re-decodes the source strings and recalculates comparison results and review completeness instead of trusting saved outcomes. Restored decisions remain the original reviewer's entries; import does not independently verify their evidence.
 
 Capture times are displayed in the current browser timezone. Unedited imported timestamps retain their exact UTC instants and milliseconds, including during the repeated hour when daylight saving time ends. Invalid files and cancelled replacements leave current work intact. There is still no automatic browser storage; export changes again before closing the page. Markdown reports are intended for reading and cannot be imported.
 
@@ -102,12 +114,12 @@ Open the `/consent-lens/` URL printed by the preview command. The publish workfl
 - Decodes using the official `@iabtechlabtcf/core` library, bundled locally with the application.
 - Processes pasted strings in the browser; no analytics, external fonts, uploads, or persistence.
 - Supports standalone TCF v2 strings. GPP decoding is not implemented.
-- Caps each input at 100,000 characters and 1,000,000 vendor-ID expansion/scan steps to limit work from compact repeated ranges. These are local processing limits, not framework validity rules.
+- Caps each input at 100,000 characters, 1,000,000 total vendor-ID expansion/scan steps, and 10,000 publisher-restriction expansion steps to bound decoding, comparison and export work. Overlapping and repeated restriction ranges count repeatedly. These are local processing limits, not framework validity rules.
 - Displays all 24 encoded purpose bit positions; their applicability depends on policy version.
 - The audit report shows vendor IDs. A separate optional lookup resolves names from a user-selected matching GVL file; no vendor list is fetched automatically.
 - Does not validate every structural or policy requirement, determine lawful processing, or certify legal compliance.
-- Export is a selected-field report, not a complete serialization of every segment or publisher restriction.
-- Comparison covers seven signal groups, including disclosed and allowed vendor IDs, and the displayed metadata. A missing optional segment is shown as absent, not as an empty list. Optional segment ID differences are calculated only when the segment is present in both captures. Publisher restrictions and other undisplayed fields remain outside the comparison.
+- Export is a selected-field report, not a complete serialization of every TCF field or segment.
+- Comparison covers seven signal groups, including disclosed and allowed vendor IDs, encoded publisher restrictions, and the displayed metadata. A missing optional segment is shown as absent, not as an empty list. Optional segment ID differences are calculated only when the segment is present in both captures. Other undisplayed fields, including publisher-purpose signals from the separate Publisher TC segment, remain outside the comparison.
 - Review prompts are general technical prompts, not official IAB control numbers. There is no automatic application of enforcement deadlines or a Controls Catalogue.
 - Evidence entries are references and notes. Files are not embedded, fetched, or verified.
 - Review completion describes documentation completeness, not compliance certification or independent evidence verification.
