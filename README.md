@@ -53,7 +53,7 @@ Rows are sorted by purpose and vendor ID. Reordered groups, ranges, repeated ent
 
 The screen shows up to 200 changed pairs; JSON and Markdown exports include the complete difference table; JSON also includes the decoded captures. Download the [synthetic restriction-only report](public/examples/synthetic-restrictions.json), then reopen it with **Resume a saved review** to see **0 flag changes · 3 restriction changes**. It is demonstration data, not real audit evidence.
 
-![Synthetic publisher-restriction comparison with one change, one removal, and one addition](docs/screenshots/publisher-restrictions.png)
+![Synthetic publisher-restriction comparison with one change, one removal, and one addition](docs/screenshots/publisher-restrictions.jpg)
 
 Reports now include a comparison-coverage marker. Reopening an older report without the matching marker recalculates the restrictions and resets **Signal transition** to **Needs review**, retaining its rationale and evidence references. Other recorded decisions are preserved. A visible notice explains the reset. The marker records comparison coverage, not independent evidence verification.
 

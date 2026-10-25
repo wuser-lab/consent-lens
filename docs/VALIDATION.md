@@ -10,7 +10,9 @@ JSON and readable exports retain the exact before/after types. Reopening re-deco
 
 Restriction expansion has a separate 10,000-step per-input processing cap, including overlaps and duplicates, enforced before library decoding. The report size ceiling is 32 MiB for both import and export. These are resource bounds, not validity rules. No GVL is attached to the decoded model or used to remove encoded restriction evidence.
 
-The production build was reopened through the actual browser file picker with the synthetic restriction-only report. The screen showed zero flag changes and three restriction changes. Both JSON and Markdown downloads preserved the exact before/after types; JSON retained the original source captures and capture instants. All 67 automated tests pass.
+The production build was reopened through the actual browser file picker with the synthetic restriction-only report. The screen showed zero flag changes and three restriction changes. Both JSON and Markdown downloads preserved the exact before/after types; JSON retained the original source captures and capture instants. All 68 automated tests pass.
+
+The example download was also exercised in the in-app browser: the validated public JSON is saved through the same Blob download path as exported reports, preserving its original bytes and filename. Tests cover failures and verify that downloading examples does not change the current review.
 
 The downloadable report is synthetic. Real-audit adoption and time saved remain unmeasured.
 
@@ -37,7 +39,7 @@ The downloaded public file was parsed locally. Its list version 48 and policy ve
 
 ## Decoder workload limit
 
-A 22,573-character constructed signal with 4,095 overlapping full-ID ranges could request about 268 million vendor-vector writes from the upstream decoder. The preflight now rejects this input before invoking that decoder. Tests cover core vectors, disclosed and allowed segments, publisher restrictions, repeated segments, truncation, and supported overlapping ranges below the limit. All 50 original automated tests passed for 0.2.0; the 0.3.0 suite has 67 passing tests.
+A 22,573-character constructed signal with 4,095 overlapping full-ID ranges could request about 268 million vendor-vector writes from the upstream decoder. The preflight now rejects this input before invoking that decoder. Tests cover core vectors, disclosed and allowed segments, publisher restrictions, repeated segments, truncation, and supported overlapping ranges below the limit. All 50 original automated tests passed for 0.2.0; the 0.3.0 suite has 68 passing tests.
 
 The per-input budget is 1,000,000 vendor-ID expansion/scan steps, with a 100,000-character cap. Release 0.3.0 additionally caps publisher-restriction expansion at 10,000 steps. This bounds the counted work; it is not a wall-clock timeout or a framework validity rule. The preflight follows the pinned library layouts and needs review when that dependency changes.
 
