@@ -110,12 +110,30 @@ function invalidateSignals() {
   $('comparison-status').textContent = 'Signals changed. Decisions reset to Needs review; existing notes are retained for rechecking. Compare again to refresh the report.';
   readiness();
 }
-function download(text, type, extension) {
+function download(text, type, extension, fileName = `consent-review.${extension}`) {
   assertReportSize(text);
   const blob = new Blob([text], { type }); const url = URL.createObjectURL(blob);
-  const link = element('a'); link.href = url; link.download = `consent-review.${extension}`; link.click();
+  const link = element('a'); link.href = url; link.download = fileName; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+for (const link of document.querySelectorAll('.import-panel a[download]')) link.addEventListener('click', async event => {
+  event.preventDefault();
+  $('import-status').textContent = 'Preparing synthetic example download…';
+  try {
+    const source = new URL(link.href);
+    if (source.origin !== window.location.origin) throw new Error('The example must come from this site.');
+    const response = await fetch(source.href, { credentials: 'omit', mode: 'same-origin' });
+    if (!response.ok) throw new Error(`The example could not be loaded (HTTP ${response.status}).`);
+    if (Number(response.headers.get('content-length')) > MAX_REPORT_BYTES) throw new Error('Example exceeds the 32 MiB report limit.');
+    const text = await response.text();
+    assertReportSize(text);
+    parseAuditReport(text); // Validate without changing the original file or current review.
+    download(text, 'application/json', 'json', source.pathname.split('/').pop());
+    $('import-status').textContent = 'Synthetic example downloaded. Use Resume a saved review to choose it.';
+  } catch (error) {
+    $('import-status').textContent = `Synthetic example not downloaded: ${error.message} Current review retained.`;
+  }
+});
 $('comparison-form').addEventListener('submit', event => { event.preventDefault(); compare(); });
 for (const id of ['before-signal', 'after-signal']) $(id).addEventListener('input', invalidateSignals);
 const contextInputIds = new Set([...Object.values(contextFields), 'before-time', 'after-time']);
