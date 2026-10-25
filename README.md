@@ -4,6 +4,8 @@ A browser-based TCF v2 evidence review workspace. Compare consent strings before
 
 **[Open Consent Lens](https://wuser-lab.github.io/consent-lens/)** — no installation required. Pasted signals and local files are processed in your browser.
 
+**Privacy:** downloads default to counts-only redacted summaries. For use without hosting connections, download the single-file offline edition from the app, or build it locally. [Privacy details](docs/PRIVACY.md).
+
 [Release validation](docs/VALIDATION.md) records published-example checks, archived-GVL checks, and production workflow testing. Real audit adoption and time savings have not yet been measured.
 
 ## Screenshots
@@ -39,9 +41,9 @@ Compare disclosed and allowed vendor IDs, with explicit segment-presence reporti
 3. Record the case ID, reviewer, website/app source, participant type, user action, and exact controls/reference version.
 4. Add an evidence index with references to screenshots or request logs, capture method, and known limitations.
 5. Review each technical prompt with **Needs review**, **Pass**, **Fail**, or **Skipped**. Completed decisions require a rationale; pass/fail decisions also require evidence references.
-6. Download JSON or a readable Markdown report. Missing context or unfinished decisions keep the report in **draft** state. Skipped checks remain explicitly skipped, and failures remain findings.
+6. Download a redacted JSON or Markdown summary by default. For a file that can reopen the review, explicitly choose **Full report — next download only**, then download JSON. The privacy choice resets after one download. Missing context or unfinished decisions keep the report in **draft** state. Skipped checks remain explicitly skipped, and failures remain findings.
 
-Editing either signal clears the comparison, disables export, and resets decisions to **Needs review**. Existing notes remain visible for rechecking. Switching modes retains in-memory entries. Reloading or closing the page loses them; export before leaving. Exported capture times are normalized to UTC and include the browser timezone.
+Editing either signal clears the comparison, disables export, and resets decisions to **Needs review**. Existing notes remain visible for rechecking. Switching modes retains in-memory entries. Reloading or closing the page loses them; download a full review JSON file before leaving if you need to resume later. Full review files normalize capture times to UTC and include the browser timezone; redacted summaries omit all timestamps.
 
 Editing audit context (including the source, action, capture times, reference version, or evidence index) also resets decisions to **Needs review**, while retaining notes and signal differences. This prevents an earlier decision from silently carrying over to revised evidence. Editing a decision's rationale or evidence references preserves its status.
 
@@ -51,7 +53,7 @@ The comparison also shows restrictions for each vendor and purpose: **Not allowe
 
 Rows are sorted by purpose and vendor ID. Reordered groups, ranges, repeated entries and individual IDs with the same decoded meaning do not create false changes. Multiple encoded types for one pair remain visible together; the tool does not select a winning type. **No encoded restriction** means none was recorded for that pair and does not establish permission to process. Vendor declarations and policy applicability need separate review. These are the [restriction values defined by the IAB technical format](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20Consent%20string%20and%20vendor%20list%20formats%20v2.md#what-are-publisher-restrictions).
 
-The screen shows up to 200 changed pairs; JSON and Markdown exports include the complete difference table; JSON also includes the decoded captures. Download the [synthetic restriction-only report](public/examples/synthetic-restrictions.json), then reopen it with **Resume a saved review** to see **0 flag changes · 3 restriction changes**. It is demonstration data, not real audit evidence.
+The screen shows up to 200 changed pairs; Full JSON and Markdown reports include the complete difference table; full JSON also includes the decoded captures. Default redacted summaries contain change counts only. Download the [synthetic restriction-only report](public/examples/synthetic-restrictions.json), then reopen it with **Resume a saved review** to see **0 flag changes · 3 restriction changes**. It is demonstration data, not real audit evidence.
 
 ![Synthetic publisher-restriction comparison with one change, one removal, and one addition](docs/screenshots/publisher-restrictions.jpg)
 
@@ -59,7 +61,7 @@ Reports now include a comparison-coverage marker. Reopening an older report with
 
 ## Reopen a saved review
 
-Download your review as JSON, then use **Resume a saved review** to select that file later. The import restores source strings, capture times, context, decisions, rationales, and evidence references. A [synthetic sample report](public/examples/synthetic-review.json) is included for trying the workflow.
+Choose **Full report — next download only** and download your review as JSON, then use **Resume a saved review** to select that file later. The import restores source strings, capture times, context, decisions, rationales, and evidence references. A [synthetic sample report](public/examples/synthetic-review.json) is included for trying the workflow.
 
 ![Resume a saved review by choosing an exported JSON report](docs/screenshots/resume-review.png)
 
@@ -73,7 +75,7 @@ Capture times are displayed in the current browser timezone. Unedited imported t
 
 Use **Vendor lookup** to choose a local Global Vendor List JSON file (up to 16 MiB), then select the before capture, after capture, or single-string input. Vendor names and membership are shown only if both the GVL version and policy version match the decoded signal. A mismatch blocks lookup; use the matching archived list from your organisation's trusted source.
 
-The table includes all referenced consent, legitimate-interest, disclosed, and allowed vendor IDs, along with supplied names and any recorded deletion date. Filter by name or ID; the interface shows up to 200 matching rows while the separate JSON download contains all referenced IDs. The download records list metadata, source filename and a SHA-256 file fingerprint where available. A fingerprint identifies file contents; it does not authenticate the source.
+The table includes all referenced consent, legitimate-interest, disclosed, and allowed vendor IDs, along with supplied names and any recorded deletion date. Filter by name or ID; the interface shows up to 200 matching rows. A full vendor JSON download contains all referenced IDs; the default redacted download contains membership counts only. The full download records list metadata, source filename and a SHA-256 file fingerprint where available. These are omitted from redacted summaries. A fingerprint identifies file contents; it does not authenticate the source.
 
 **Try synthetic lookup** demonstrates listed, deleted, and unlisted entries with made-up vendor names. It replaces the loaded list and single-string input after confirmation if needed, while retaining audit captures and notes. Vendor lookup results are separate from saved audit reports and must be exported separately. Signals, files and notes are never sent to a remote service.
 
@@ -108,6 +110,25 @@ pnpm run preview
 ```
 
 Open the `/consent-lens/` URL printed by the preview command. The publish workflow tests and verifies the project-path build before deployment.
+
+## Offline edition and redacted downloads
+
+Download **Offline edition** in the app, then open the saved `consent-lens-offline.html` in a browser. Its code, styles, synthetic examples and license notices are all in that file. It needs no local server. The saved edition has no external asset references or outbound links, and its Content Security Policy blocks app network connections. Loading or downloading from the public website still reaches GitHub; using a copy already saved locally avoids those hosting requests.
+
+To create the file locally:
+
+```sh
+pnpm run build:offline
+pnpm run verify:offline
+```
+
+The file is written to `dist/consent-lens-offline.html`. Normal production builds include it too.
+
+All three export flows—review, single-string inspection and vendor lookup—default to a new **redacted summary** containing fixed labels and aggregate counts. The summary omits names, case/source details, all free text, raw strings, individual IDs, timestamps, versions, filenames and file fingerprints. It cannot reopen a review or reproduce its evidence. Unusual combinations of counts may still be linkable; this is redaction, not a guarantee of anonymity.
+
+A full report is an explicit one-download choice, preserving the original data for private backups. After that download, the selector resets to redacted. Neither choice changes current inputs or notes. Synthetic example downloads contain only the bundled demonstration data and make no network request.
+
+GitHub [logs visitor IP addresses for security](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages#data-collection) on the public site. The offline edition does not anonymize the surrounding browser, extensions, operating system, or files a user later shares. See [privacy details](docs/PRIVACY.md).
 
 ## Scope and privacy
 

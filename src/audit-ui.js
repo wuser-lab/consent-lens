@@ -3,12 +3,24 @@ import { EXAMPLE_BEFORE, EXAMPLE_AFTER } from './examples.js';
 import { parseAuditReport, MAX_REPORT_BYTES, localCaptureValue, captureInstant } from './import-report.js';
 import { restrictionTypesLabel } from './restrictions.js';
 import { assertReportSize } from './report-limits.js';
+import { getEmbeddedExample } from './embedded-examples.js';
+import { redactAudit, redactedMarkdown } from './redaction.js';
+import { consumeFullExportChoice } from './export-choice.js';
 
 const $ = id => document.getElementById(id);
 const contextFields = { caseId: 'case-id', reviewer: 'reviewer', source: 'source', participantType: 'participant-type', action: 'action', controlsVersion: 'controls-version', evidenceNotes: 'evidence-notes' };
 let comparisonReady = false;
 let editRevision = 0;
 const restoredCaptureTimes = new Map();
+function refreshExportPrivacy() {
+  const full = $('export-privacy')?.value === 'full';
+  const labels = full ? { 'export-audit': 'Download full JSON ↓', 'export-markdown': 'Download full report ↓', export: 'Download full JSON ↓', 'vendor-export': 'Download full vendor report ↓' } : { 'export-audit': 'Download redacted JSON ↓', 'export-markdown': 'Download redacted summary ↓', export: 'Download redacted JSON ↓', 'vendor-export': 'Download redacted vendor summary ↓' };
+  for (const [id, label] of Object.entries(labels)) if ($(id)) $(id).textContent = label;
+  if ($('privacy-selection-status')) $('privacy-selection-status').textContent = full ? 'The next download will include full details, then reset to Redacted summary.' : 'Downloads contain redacted summaries by default.';
+}
+if ($('export-privacy')) $('export-privacy').value = 'redacted';
+$('export-privacy')?.addEventListener('change', refreshExportPrivacy);
+refreshExportPrivacy();
 function element(tag, text, className) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
@@ -30,7 +42,7 @@ function renderRestrictionComparison(diff) {
     return row;
   }));
   $('restriction-table').hidden = !diff.rows.length;
-  $('restriction-row-count').textContent = diff.rows.length ? `Showing ${Math.min(diff.rows.length, 200)} of ${diff.rows.length} changed vendor-purpose pairs. The JSON export includes the complete difference table.` : 'No publisher-restriction changes detected.';
+  $('restriction-row-count').textContent = diff.rows.length ? `Showing ${Math.min(diff.rows.length, 200)} of ${diff.rows.length} changed vendor-purpose pairs. The Full JSON export includes the complete difference table.` : 'No publisher-restriction changes detected.';
 }
 function field(label, id, node) {
   const wrapper = element('div');
@@ -116,19 +128,18 @@ function download(text, type, extension, fileName = `consent-review.${extension}
   const link = element('a'); link.href = url; link.download = fileName; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-for (const link of document.querySelectorAll('.import-panel a[download]')) link.addEventListener('click', async event => {
+for (const link of document.querySelectorAll('.import-panel a[download]')) link.addEventListener('click', event => {
   event.preventDefault();
   $('import-status').textContent = 'Preparing synthetic example download…';
   try {
     const source = new URL(link.href);
     if (source.origin !== window.location.origin) throw new Error('The example must come from this site.');
-    const response = await fetch(source.href, { credentials: 'omit', mode: 'same-origin' });
-    if (!response.ok) throw new Error(`The example could not be loaded (HTTP ${response.status}).`);
-    if (Number(response.headers.get('content-length')) > MAX_REPORT_BYTES) throw new Error('Example exceeds the 32 MiB report limit.');
-    const text = await response.text();
+    const fileName = link.dataset.exampleFile || source.pathname.split('/').pop();
+    const text = getEmbeddedExample(fileName);
+    if (text === undefined) throw new Error('This example is not bundled with the app.');
     assertReportSize(text);
     parseAuditReport(text); // Validate without changing the original file or current review.
-    download(text, 'application/json', 'json', source.pathname.split('/').pop());
+    download(text, 'application/json', 'json', fileName);
     $('import-status').textContent = 'Synthetic example downloaded. Use Resume a saved review to choose it.';
   } catch (error) {
     $('import-status').textContent = `Synthetic example not downloaded: ${error.message} Current review retained.`;
@@ -160,7 +171,7 @@ $('import-report').addEventListener('change', async event => {
     if (file.size > MAX_REPORT_BYTES) throw new Error('Report exceeds the 32 MiB import limit.');
     const audit = parseAuditReport(await file.text());
     if (revision !== editRevision) throw new Error('The review changed while the file was loading. Choose the report again when ready.');
-    if (hasWork() && !window.confirm('Replace the current review with this report? Export your current work first if you need it.')) {
+    if (hasWork() && !window.confirm('Replace the current review with this report? Download a full review file first if you need to resume it.')) {
       $('import-status').textContent = 'Import cancelled. Current review retained.';
       return;
     }
@@ -189,12 +200,18 @@ $('import-report').addEventListener('change', async event => {
 });
 for (const [id, kind] of [['export-audit', 'json'], ['export-markdown', 'md']]) $(id).addEventListener('click', () => {
   if (!comparisonReady) return;
-  try { const audit = collect(); download(kind === 'json' ? JSON.stringify(audit, null, 2) : auditMarkdown(audit), kind === 'json' ? 'application/json' : 'text/markdown;charset=utf-8', kind); }
+  try {
+    const full = consumeFullExportChoice();
+    const audit = collect();
+    const output = full ? audit : redactAudit(audit);
+    const text = kind === 'json' ? JSON.stringify(output, null, 2) : full ? auditMarkdown(audit) : redactedMarkdown(output);
+    download(text, kind === 'json' ? 'application/json' : 'text/markdown;charset=utf-8', kind, `${full ? 'consent-review' : 'consent-summary'}.${kind}`);
+  }
   catch (error) { $('report-readiness').textContent = error.message; }
 });
 $('comparison-sample').addEventListener('click', () => {
   if (hasWork()) {
-    if (!window.confirm('Replace the current captures, context, and review notes with a synthetic example? Export your current report first if you need it.')) return;
+    if (!window.confirm('Replace the current captures, context, and review notes with a synthetic example? Download a full review file first if you need to resume it.')) return;
   }
   editRevision++;
   restoredCaptureTimes.clear();

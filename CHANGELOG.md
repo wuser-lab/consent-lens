@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 25 October 2026
+
+- Default to counts-only redacted summaries for review JSON/Markdown, single-string inspection and vendor lookup.
+- Omit identifying/free-text details, raw signals, individual IDs, timestamps, versions and file fingerprints using allowlisted output structures.
+- Require a fresh full-report choice for every download; preserve current work and reject attempts to reopen a summary as a review file.
+- Add a self-contained offline HTML edition with inline code/styles, embedded examples/notices, local links and a network-blocking Content Security Policy.
+- Bundle synthetic examples so their downloads need no network request.
+- Explain GitHub visitor logging and the limits of redaction; keep full local backups available.
+
 ## 0.3.0 — 25 October 2026
 
 - Compare publisher restrictions by vendor and purpose, with separate added, removed, changed and unchanged counts.

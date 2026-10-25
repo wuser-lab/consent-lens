@@ -1,5 +1,8 @@
 import { parseVendorList, checkVendorMembership, MAX_VENDOR_LIST_BYTES } from './vendor-list.js';
 import { SYNTHETIC_VENDOR_LIST, SYNTHETIC_VENDOR_SIGNAL } from './vendor-demo.js';
+import { redactVendor } from './redaction.js';
+import { consumeFullExportChoice } from './export-choice.js';
+import { assertReportSize } from './report-limits.js';
 const $ = id => document.getElementById(id);
 let vendorList;
 let source;
@@ -77,7 +80,12 @@ $('vendor-clear').addEventListener('click', () => {
 });
 $('vendor-export').addEventListener('click', () => {
   if (!report) return;
-  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = 'vendor-membership-check.json'; link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  try {
+    const full = consumeFullExportChoice();
+    const text = JSON.stringify(full ? report : redactVendor(report), null, 2);
+    assertReportSize(text);
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = full ? 'vendor-membership-check.json' : 'vendor-summary.json'; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) { $('vendor-list-status').textContent = `Download not prepared: ${error.message}`; }
 });

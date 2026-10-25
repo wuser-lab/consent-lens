@@ -1,6 +1,18 @@
 # Release validation
 
-This records technical evidence for the 0.2.0 and 0.3.0 releases. It does not establish legal compliance, production adoption, or time saved in real audits.
+This records technical evidence for the 0.2.0, 0.3.0 and 0.4.0 releases. It does not establish legal compliance, production adoption, or time saved in real audits.
+
+## Redacted reports and offline use (0.4.0)
+
+The suite has 82 passing tests. Independent privacy tests place identifying canaries in context, source strings, decoded metadata, labels, notes, evidence references, filenames, hashes and unknown nested fields. Redacted JSON and Markdown use fixed allowlists and counts; tests verify canaries are absent, invalid scalar values cannot carry text, original objects are not modified, and equivalent counts produce identical summaries without substituted identifiers.
+
+Real UI handlers cover redacted defaults for audit JSON/Markdown, single inspection and vendor lookup. A one-download full choice resets before export, including failures, and does not affect subsequent downloads. Redacted summaries are explicitly rejected as resumable reviews.
+
+The generated offline file is verified to contain one inline classic script, inline CSS, both exact-byte examples, license notices, local-only links and a network-blocking Content Security Policy. Its local-file execution test exercises comparison, inspection, vendor lookup, redacted exports, an intentional full backup and reopening it, and example downloads with fetch/XHR/WebSocket traps. No network attempts were observed in those automated workflows. The normal hosted-download handler is excluded from the offline bundle.
+
+Actual browser testing of the web production build downloaded a redacted summary containing none of the synthetic identifying details or raw captures. A deliberate full backup retained them and reset the selector. The offline download matched the generated HTML byte for byte. The browser automation policy blocks opening file URLs, so direct manual browser verification of the saved file was not performed; local-file execution is covered by the automated test.
+
+The public website still contacts GitHub and is subject to host visitor logging. Downloading the offline file from that site also contacts the host once. Using an already-local copy avoids those app hosting requests. Counts may still be linkable; no full anonymity guarantee is claimed. See [privacy details](PRIVACY.md).
 
 ## Publisher restrictions (0.3.0)
 
