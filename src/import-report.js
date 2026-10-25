@@ -28,6 +28,7 @@ export function parseAuditReport(source) {
   let data;
   try { data = JSON.parse(source); } catch { throw new Error('This file is not valid JSON. Choose a Consent Lens JSON report.'); }
   object(data, 'report');
+  if (data.reportType === 'redacted-summary') throw new Error('Redacted summaries cannot reopen a review because source captures and context were removed. Choose a full review JSON file.');
   if (data.tool !== 'Consent Lens' || data.schemaVersion !== '1.0') throw new Error('Expected a Consent Lens report with schema version 1.0.');
   const captures = object(data.captures, 'captures');
   const before = text(captures.before, 'before signal', 100000);

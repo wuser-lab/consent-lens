@@ -1,7 +1,11 @@
 import './style.css';
 import './audit-ui.js';
 import './vendor-ui.js';
+import './offline-download.js';
 import { inspect, SAMPLE } from './decode.js';
+import { redactSignal } from './redaction.js';
+import { consumeFullExportChoice } from './export-choice.js';
+import { assertReportSize } from './report-limits.js';
 const $ = (id) => document.getElementById(id);
 let report;
 function run() {
@@ -38,6 +42,11 @@ $('sample').addEventListener('click', () => { $('signal').value = SAMPLE; run();
 $('signal').addEventListener('input', () => { report = undefined; $('results').hidden = true; $('status').textContent = ''; });
 $('export').addEventListener('click', () => {
   if (!report) return;
-  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = 'consent-report.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  try {
+    const full = consumeFullExportChoice();
+    const text = JSON.stringify(full ? report : redactSignal(report), null, 2);
+    assertReportSize(text);
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = full ? 'consent-report.json' : 'signal-summary.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) { $('status').textContent = `Download not prepared: ${error.message}`; $('status').className = 'error'; }
 });

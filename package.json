@@ -1,15 +1,17 @@
 {
   "name": "consent-lens",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
+    "build": "node scripts/build-offline.mjs --examples-only && vite build && node scripts/build-offline.mjs",
     "test": "node --test",
-    "build:pages": "vite build --base /consent-lens/",
-    "verify:pages": "node scripts/verify-pages-build.mjs",
-    "preview": "vite preview --host 127.0.0.1 --base /consent-lens/"
+    "build:pages": "node scripts/build-offline.mjs --examples-only && vite build --base /consent-lens/ && node scripts/build-offline.mjs",
+    "verify:pages": "node scripts/verify-pages-build.mjs && node scripts/verify-offline.mjs",
+    "preview": "vite preview --host 127.0.0.1 --base /consent-lens/",
+    "build:offline": "node scripts/build-offline.mjs",
+    "verify:offline": "node scripts/verify-offline.mjs"
   },
   "dependencies": {
     "@iabtechlabtcf/core": "1.5.22"
