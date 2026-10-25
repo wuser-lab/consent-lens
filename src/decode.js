@@ -1,4 +1,5 @@
 import { TCString, Base64Url, BitLength, Segment, SegmentIDs } from '@iabtechlabtcf/core';
+import { assertDecodeBudget } from './decode-budget.js';
 
 export const SAMPLE = 'COwK6gaOwK6gaFmAAAENAPCAAAAAAAAAAAAAAAAAAAAA';
 function ids(vector) {
@@ -12,6 +13,7 @@ export function inspect(input) {
   if (value.length > 100000) throw new Error('This inspector supports strings up to 100,000 characters.');
   if (value.includes('~')) throw new Error('This looks like a GPP string. This version supports standalone TCF v2 strings.');
   if (!/^C[A-Za-z0-9_-]*(\.[A-Za-z0-9_-]+)*$/.test(value)) throw new Error('Expected a TCF v2 string beginning with C, using base64url characters.');
+  assertDecodeBudget(value);
   let model;
   try { model = TCString.decode(value); } catch { throw new Error('The TCF library could not decode this string. Check that it is complete and unmodified.'); }
   const segmentTypes = new Set(value.split('.').slice(1).map(segment => parseInt(Base64Url.decode(segment[0]).slice(0, BitLength.segmentType), 2)));
