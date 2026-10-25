@@ -1,4 +1,5 @@
 import { inspect } from './decode.js';
+import { compareRestrictions, restrictionTypesLabel, RESTRICTION_COVERAGE } from './restrictions.js';
 
 export const GROUPS = {
   purposeConsentIds: 'Purpose consent',
@@ -19,7 +20,7 @@ export const FIELDS = {
 };
 export const CHECKS = [
   { id: 'capture', title: 'Capture context', description: 'Confirm the source, capture times, and user action for both signals.' },
-  { id: 'signal', title: 'Signal transition', description: 'Review added and removed flags against the recorded user action and supporting evidence.' },
+  { id: 'signal', title: 'Signal transition', description: 'Review added and removed flags and publisher-restriction changes against the recorded user action and supporting evidence.' },
   { id: 'metadata', title: 'Metadata changes', description: 'Review CMP, policy, vendor-list, language, and timestamp differences. Explain relevant differences.' },
   { id: 'evidence', title: 'Evidence coverage', description: 'Confirm references support the finding. Record missing screenshots, network captures, or other limitations.' },
 ];
@@ -41,7 +42,7 @@ export function compareSignals(beforeInput, afterInput) {
       unchangedCount: comparable ? [...current].filter(id => previous.has(id)).length : null };
   });
   const metadata = Object.entries(FIELDS).map(([key, label]) => ({ key, label, before: before[key], after: after[key], changed: before[key] !== after[key] }));
-  return { before, after, groups, metadata, rawStringsEqual: beforeInput.trim() === afterInput.trim(), totalFlagChanges: groups.reduce((sum, group) => sum + group.added.length + group.removed.length, 0) };
+  return { before, after, groups, metadata, publisherRestrictions: compareRestrictions(before.publisherRestrictions, after.publisherRestrictions), rawStringsEqual: beforeInput.trim() === afterInput.trim(), totalFlagChanges: groups.reduce((sum, group) => sum + group.added.length + group.removed.length, 0) };
 }
 
 export function buildAudit({ before, after, context, checks, now = new Date() }) {
@@ -67,6 +68,7 @@ export function buildAudit({ before, after, context, checks, now = new Date() })
   }
   return {
     schemaVersion: '1.0', tool: 'Consent Lens', exportedAt: now.toISOString(),
+    comparisonCoverage: RESTRICTION_COVERAGE,
     reviewState: missing.length ? 'draft' : 'reviewed',
     outcome: missing.length ? 'incomplete' : normalised.some(check => check.status === 'fail') ? 'findings-recorded' : normalised.some(check => check.status === 'skipped') ? 'reviewed-with-skips' : 'reviewed-no-failures-recorded',
     context: { ...context }, captures: { before: before.trim(), after: after.trim() },
@@ -74,7 +76,8 @@ export function buildAudit({ before, after, context, checks, now = new Date() })
     limitations: [
       'Reviewer-defined technical review, not an official IAB Controls Catalogue assessment or legal compliance verdict.',
       'No vendor-list, domain-ownership, network-traffic, screenshot-content, or evidence-link validation.',
-      'Diff covers the displayed metadata and seven signal groups, not every TCF field or publisher restriction. Optional segment IDs are compared only when that segment is present in both captures.',
+      'Diff covers the displayed metadata, seven signal groups, and encoded publisher restrictions, not every TCF field. Optional segment IDs are compared only when that segment is present in both captures.',
+      'Publisher-restriction differences describe encoded vendor-purpose pairs. No encoded restriction does not establish permission; vendor declarations and policy applicability are not evaluated. Multiple encoded types are retained without choosing a winner.',
       'Evidence entries are references and notes; linked files are not embedded in this report.',
       'Decoded flags alone do not establish permission to process personal data.',
     ],
@@ -90,6 +93,10 @@ export function auditMarkdown(audit) {
     if (group.comparable) lines.push(`- ${group.label}: added ${group.added.join(', ') || 'none'}; removed ${group.removed.join(', ') || 'none'}; unchanged ${group.unchangedCount}.`);
     else lines.push(`- ${group.label}: not compared because a segment is absent. Before: ${group.beforeSegmentPresent ? `present (${group.beforeCount} IDs)` : 'absent'}; after: ${group.afterSegmentPresent ? `present (${group.afterCount} IDs)` : 'absent'}.`);
   }
+  const restrictions = audit.comparison.publisherRestrictions;
+  lines.push('', '## Publisher restrictions', '', `${restrictions.totalChanges} changed vendor-purpose pairs: ${restrictions.addedCount} added, ${restrictions.removedCount} removed, ${restrictions.changedCount} changed; ${restrictions.unchangedCount} unchanged.`, '', 'No encoded restriction does not establish permission to process. Vendor declarations and policy applicability require separate review. Multiple encoded types are preserved.', '');
+  for (const row of restrictions.rows) lines.push(`- Purpose ${row.purposeId}, vendor ${row.vendorId}: ${restrictionTypesLabel(row.before)} → ${restrictionTypesLabel(row.after)} (${row.change}).`);
+  if (!restrictions.rows.length) lines.push('No publisher-restriction changes detected.');
   lines.push('', '## Metadata', '');
   for (const field of audit.comparison.metadata) lines.push(`- ${field.label}: ${safe(field.before)} → ${safe(field.after)}${field.changed ? ' (changed)' : ''}`);
   lines.push('', '## Reviewer decisions', '');

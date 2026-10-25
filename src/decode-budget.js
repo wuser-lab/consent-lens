@@ -2,6 +2,7 @@ import { Base64Url, BitLength, FieldSequence, Fields, Segment, SegmentIDs } from
 
 // This is a local processing limit, not a TCF validity or compliance rule.
 export const MAX_VENDOR_OPERATIONS = 1_000_000;
+export const MAX_RESTRICTION_OPERATIONS = 10_000;
 export const MAX_SIGNAL_CHARACTERS = 100000;
 const fieldSequences = new FieldSequence();
 const vendorVectors = new Set([
@@ -35,20 +36,28 @@ export function assertDecodeBudget(encoded) {
     throw new Error(`This inspector supports signals up to ${MAX_SIGNAL_CHARACTERS.toLocaleString('en-US')} characters.`);
   }
   let vendorOperations = 0;
+  let restrictionOperations = 0;
   function charge(amount) {
     vendorOperations += amount;
     if (vendorOperations > MAX_VENDOR_OPERATIONS) {
       throw new Error('This signal exceeds the local decoding limit of 1,000,000 vendor-ID expansion steps. Inspect it with an offline tool that limits resource use. This is a processing limit, not a compliance result.');
     }
   }
-  function ranges(reader, count) {
+  function ranges(reader, count, publisherRestriction = false) {
     for (let index = 0; index < count; index++) {
       const isRange = reader.read(BitLength.singleOrRange);
       const first = reader.read(BitLength.vendorId);
       const last = isRange ? reader.read(BitLength.vendorId) : first;
       // Reversed ranges do no work in the vendor decoder (and are rejected by
       // the restriction decoder). Leave their semantic handling to the library.
-      charge(Math.max(0, last - first + 1));
+      const operations = Math.max(0, last - first + 1);
+      if (publisherRestriction) {
+        restrictionOperations += operations;
+        if (restrictionOperations > MAX_RESTRICTION_OPERATIONS) {
+          throw new Error('This signal exceeds the local processing limit of 10,000 publisher-restriction expansion steps. This is a processing limit, not a compliance result.');
+        }
+      }
+      charge(operations);
     }
   }
   function vendorVector(reader, version) {
@@ -66,7 +75,7 @@ export function assertDecodeBudget(encoded) {
     const groups = reader.read(BitLength.numRestrictions);
     for (let index = 0; index < groups; index++) {
       reader.skip(BitLength.purposeId + BitLength.restrictionType);
-      ranges(reader, reader.read(BitLength.numEntries));
+      ranges(reader, reader.read(BitLength.numEntries), true);
     }
   }
 
@@ -87,5 +96,5 @@ export function assertDecodeBudget(encoded) {
       else reader.skip(BitLength[field]);
     }
   }
-  return { vendorOperations, limit: MAX_VENDOR_OPERATIONS };
+  return { vendorOperations, restrictionOperations, limit: MAX_VENDOR_OPERATIONS };
 }

@@ -1,6 +1,8 @@
 import { CHECKS, compareSignals, buildAudit, auditMarkdown } from './review.js';
 import { EXAMPLE_BEFORE, EXAMPLE_AFTER } from './examples.js';
 import { parseAuditReport, MAX_REPORT_BYTES, localCaptureValue, captureInstant } from './import-report.js';
+import { restrictionTypesLabel } from './restrictions.js';
+import { assertReportSize } from './report-limits.js';
 
 const $ = id => document.getElementById(id);
 const contextFields = { caseId: 'case-id', reviewer: 'reviewer', source: 'source', participantType: 'participant-type', action: 'action', controlsVersion: 'controls-version', evidenceNotes: 'evidence-notes' };
@@ -12,6 +14,23 @@ function element(tag, text, className) {
   if (text !== undefined) node.textContent = text;
   if (className) node.className = className;
   return node;
+}
+function clearRestrictionComparison() {
+  $('restriction-rows').replaceChildren();
+  $('restriction-summary').textContent = '';
+  $('restriction-row-count').textContent = '';
+  $('restriction-table').hidden = true;
+}
+function renderRestrictionComparison(diff) {
+  $('restriction-summary').textContent = `${diff.totalChanges} restriction changes across vendor-purpose pairs: ${diff.addedCount} added, ${diff.removedCount} removed, ${diff.changedCount} changed; ${diff.unchangedCount} unchanged. Before: ${diff.beforeCount} restricted pairs; after: ${diff.afterCount}.`;
+  $('restriction-rows').replaceChildren(...diff.rows.slice(0, 200).map(item => {
+    const row = element('tr');
+    const change = { added: 'Added', removed: 'Removed', changed: 'Changed' }[item.change];
+    for (const value of [item.purposeId, item.vendorId, restrictionTypesLabel(item.before), restrictionTypesLabel(item.after), change]) row.append(element('td', String(value)));
+    return row;
+  }));
+  $('restriction-table').hidden = !diff.rows.length;
+  $('restriction-row-count').textContent = diff.rows.length ? `Showing ${Math.min(diff.rows.length, 200)} of ${diff.rows.length} changed vendor-purpose pairs. The JSON export includes the complete difference table.` : 'No publisher-restriction changes detected.';
 }
 function field(label, id, node) {
   const wrapper = element('div');
@@ -60,6 +79,7 @@ function readiness() {
 }
 function compare() {
   comparisonReady = false; $('comparison-results').hidden = true;
+  clearRestrictionComparison();
   try {
     const comparison = compareSignals($('before-signal').value, $('after-signal').value);
     $('diff-groups').replaceChildren();
@@ -71,12 +91,13 @@ function compare() {
       else card.append(element('p', 'IDs not compared: a segment is absent.'));
       $('diff-groups').append(card);
     }
+    renderRestrictionComparison(comparison.publisherRestrictions);
     $('metadata-diff').replaceChildren(...comparison.metadata.map(item => {
       const row = element('tr'); if (item.changed) row.className = 'changed';
       row.append(element('th', item.label), element('td', String(item.before)), element('td', String(item.after))); return row;
     }));
-    $('change-count').textContent = `${comparison.totalFlagChanges} flag changes`;
-    $('comparison-caveat').textContent = comparison.rawStringsEqual ? 'The input strings are identical. Optional segment IDs are compared only when present in both captures.' : 'Comparison covers seven signal groups and the metadata below. Optional segment IDs are compared only when present in both captures; publisher restrictions remain outside this comparison.';
+    $('change-count').textContent = `${comparison.totalFlagChanges} flag changes · ${comparison.publisherRestrictions.totalChanges} restriction changes`;
+    $('comparison-caveat').textContent = comparison.rawStringsEqual ? 'The input strings are identical. No flag or publisher-restriction differences were detected. Optional segment IDs are compared only when present in both captures.' : 'Comparison covers seven signal groups, publisher restrictions, and the metadata below. Optional segment IDs are compared only when present in both captures.';
     $('comparison-status').className = 'success'; $('comparison-status').textContent = 'Both signals decoded. Changes are observations; review their meaning against your evidence.';
     $('comparison-results').hidden = false; comparisonReady = true;
   } catch (error) { $('comparison-status').className = 'error'; $('comparison-status').textContent = error.message; }
@@ -84,11 +105,13 @@ function compare() {
 }
 function invalidateSignals() {
   comparisonReady = false; $('comparison-results').hidden = true;
+  clearRestrictionComparison();
   for (const check of CHECKS) $(`decision-${check.id}`).value = 'needs-review';
   $('comparison-status').textContent = 'Signals changed. Decisions reset to Needs review; existing notes are retained for rechecking. Compare again to refresh the report.';
   readiness();
 }
 function download(text, type, extension) {
+  assertReportSize(text);
   const blob = new Blob([text], { type }); const url = URL.createObjectURL(blob);
   const link = element('a'); link.href = url; link.download = `consent-review.${extension}`; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -116,7 +139,7 @@ $('import-report').addEventListener('change', async event => {
   const revision = editRevision;
   $('import-status').textContent = 'Reading report locally…';
   try {
-    if (file.size > MAX_REPORT_BYTES) throw new Error('Report exceeds the 2 MiB import limit.');
+    if (file.size > MAX_REPORT_BYTES) throw new Error('Report exceeds the 32 MiB import limit.');
     const audit = parseAuditReport(await file.text());
     if (revision !== editRevision) throw new Error('The review changed while the file was loading. Choose the report again when ready.');
     if (hasWork() && !window.confirm('Replace the current review with this report? Export your current work first if you need it.')) {
@@ -141,7 +164,7 @@ $('import-report').addEventListener('change', async event => {
     $('compare-tab').click();
     compare();
     document.dispatchEvent(new window.Event('consent-captures-changed'));
-    $('import-status').textContent = 'Report reopened. Signals re-decoded; recorded decisions and notes restored. Imported evidence and decisions are not independently verified.';
+    $('import-status').textContent = [audit.importWarnings?.length ? 'Report reopened. Signals re-decoded; notes and evidence references restored. Imported evidence and decisions are not independently verified.' : 'Report reopened. Signals re-decoded; recorded decisions and notes restored. Imported evidence and decisions are not independently verified.', ...(audit.importWarnings || [])].join(' ');
   } catch (error) {
     $('import-status').textContent = `Report not imported: ${error.message} Current review retained.`;
   } finally { event.target.value = ''; }

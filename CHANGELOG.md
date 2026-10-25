@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 25 October 2026
+
+- Compare publisher restrictions by vendor and purpose, with separate added, removed, changed and unchanged counts.
+- Preserve multiple encoded restriction types and normalize equivalent ranges, duplicate entries and ordering.
+- Include full restriction differences in JSON and Markdown reports; show up to 200 changes on screen.
+- Add a downloadable restriction-only synthetic report with zero flag changes and three restriction changes.
+- Reset the signal-transition decision when reopening reports without matching comparison coverage, retaining notes and evidence references.
+- Bound restriction expansion at 10,000 steps per signal, allow reports up to 32 MiB, and block oversized exports.
+
 ## 0.2.0 — 25 October 2026
 
 - Publish a browser-only release on GitHub Pages, with no installation required.

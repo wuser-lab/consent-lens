@@ -61,7 +61,7 @@ test('counts publisher-restriction ranges across entries and groups', () => {
   assert.equal(assertDecodeBudget(signal).vendorOperations, 20);
   assert.doesNotThrow(() => inspect(signal));
   const excessive = integer(2, 12) + group(fullRanges(8)) + group(fullRanges(8));
-  assert.throws(() => assertDecodeBudget(core({ restrictions: excessive })), /local decoding limit/);
+  assert.throws(() => assertDecodeBudget(core({ restrictions: excessive })), /10,000 publisher-restriction/);
 });
 
 test('recognises the legacy default-consent bit when walking a version 1 core', () => {

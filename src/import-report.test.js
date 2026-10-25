@@ -62,8 +62,8 @@ test('rejects malformed files, unsupported schemas and invalid field types', () 
   }
 });
 test('enforces import size using UTF-8 bytes as well as character count', () => {
-  assert.throws(() => parseAuditReport(' '.repeat(MAX_REPORT_BYTES + 1)), /2 MiB/);
-  assert.throws(() => parseAuditReport('界'.repeat(Math.ceil(MAX_REPORT_BYTES / 3))), /2 MiB/);
+  assert.throws(() => parseAuditReport(' '.repeat(MAX_REPORT_BYTES + 1)), /32 MiB/);
+  assert.throws(() => parseAuditReport('界'.repeat(Math.ceil(MAX_REPORT_BYTES / 3))), /32 MiB/);
 });
 test('ignores unknown context properties', () => {
   const original = savedReport();

@@ -15,4 +15,8 @@ for (const value of assets) {
   if (value !== base) await access(join('dist', value.slice(base.length)));
 }
 JSON.parse(await readFile('dist/examples/synthetic-review.json', 'utf8'));
+const restrictionExample = JSON.parse(await readFile('dist/examples/synthetic-restrictions.json', 'utf8'));
+assert.equal(restrictionExample.comparisonCoverage, 'publisher-restrictions-v1');
+assert.equal(restrictionExample.comparison.totalFlagChanges, 0);
+assert.equal(restrictionExample.comparison.publisherRestrictions.totalChanges, 3);
 console.log('GitHub Pages build: assets, home link, and sample report resolve under /consent-lens/.');
