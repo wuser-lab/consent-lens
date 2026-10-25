@@ -2,6 +2,10 @@
 
 A browser-based TCF v2 evidence review workspace. Compare consent strings before and after a user action, record evidence references, document reviewer decisions, and export a traceable report. Single-string inspection remains available in a separate mode.
 
+**[Open Consent Lens](https://wuser-lab.github.io/consent-lens/)** — no installation required. Pasted signals and local files are processed in your browser.
+
+[Release validation](docs/VALIDATION.md) records published-example checks, archived-GVL checks, and production workflow testing. Real audit adoption and time savings have not yet been measured.
+
 ## Screenshots
 
 The screens below use synthetic demonstration data, not real audit evidence.
@@ -83,11 +87,22 @@ pnpm build
 
 The build produces a static site in `dist/`.
 
+For the GitHub Pages project URL:
+
+```sh
+pnpm run build:pages
+pnpm run verify:pages
+pnpm run preview
+```
+
+Open the `/consent-lens/` URL printed by the preview command. The publish workflow tests and verifies the project-path build before deployment.
+
 ## Scope and privacy
 
 - Decodes using the official `@iabtechlabtcf/core` library, bundled locally with the application.
 - Processes pasted strings in the browser; no analytics, external fonts, uploads, or persistence.
 - Supports standalone TCF v2 strings. GPP decoding is not implemented.
+- Caps each input at 100,000 characters and 1,000,000 vendor-ID expansion/scan steps to limit work from compact repeated ranges. These are local processing limits, not framework validity rules.
 - Displays all 24 encoded purpose bit positions; their applicability depends on policy version.
 - The audit report shows vendor IDs. A separate optional lookup resolves names from a user-selected matching GVL file; no vendor list is fetched automatically.
 - Does not validate every structural or policy requirement, determine lawful processing, or certify legal compliance.
@@ -103,6 +118,7 @@ The build produces a static site in `dist/`.
 
 ## Sources
 
+- [Third-party notices](public/THIRD_PARTY_NOTICES.txt)
 - [TCF core library](https://github.com/InteractiveAdvertisingBureau/iabtcf-es)
 - [TCF technical specifications](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework)
 - The non-empty regression fixture comes from [GPP issue 96](https://github.com/IABTechLab/iabgpp-es/issues/96).
