@@ -73,6 +73,7 @@ function collect() {
     checks: CHECKS.map(check => ({ id: check.id, status: $(`decision-${check.id}`).value, rationale: $(`rationale-${check.id}`).value, evidence: $(`evidence-${check.id}`).value })) });
 }
 function readiness() {
+  refreshLeaveWarning();
   $('export-audit').disabled = $('export-markdown').disabled = !comparisonReady;
   $('outstanding-items').replaceChildren();
   if (!comparisonReady) {
@@ -162,6 +163,16 @@ $('audit-workspace').addEventListener('input', handleReviewEdit);
 $('audit-workspace').addEventListener('change', handleReviewEdit);
 function hasWork() {
   return Object.values(contextFields).some(id => id === 'participant-type' ? $(id).value !== 'unspecified' : $(id).value) || ['before-signal', 'after-signal', 'before-time', 'after-time'].some(id => $(id).value) || CHECKS.some(check => $(`rationale-${check.id}`).value || $(`evidence-${check.id}`).value || $(`decision-${check.id}`).value !== 'needs-review');
+}
+function warnBeforeLeaving(event) {
+  event.preventDefault();
+  event.returnValue = '';
+}
+function refreshLeaveWarning() {
+  // Downloads can be cancelled after preparation, so keep warning until the
+  // review is empty. No review values are saved to browser storage.
+  if (hasWork()) window.addEventListener('beforeunload', warnBeforeLeaving);
+  else window.removeEventListener('beforeunload', warnBeforeLeaving);
 }
 $('import-report').addEventListener('change', async event => {
   const file = event.target.files?.[0];
