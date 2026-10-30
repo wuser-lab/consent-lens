@@ -11,6 +11,7 @@ const $ = id => document.getElementById(id);
 const contextFields = { caseId: 'case-id', reviewer: 'reviewer', source: 'source', participantType: 'participant-type', action: 'action', controlsVersion: 'controls-version', evidenceNotes: 'evidence-notes' };
 let comparisonReady = false;
 let editRevision = 0;
+let importSequence = 0;
 const restoredCaptureTimes = new Map();
 function refreshExportPrivacy() {
   const full = $('export-privacy')?.value === 'full';
@@ -165,11 +166,14 @@ function hasWork() {
 $('import-report').addEventListener('change', async event => {
   const file = event.target.files?.[0];
   if (!file) return;
+  const sequence = ++importSequence;
   const revision = editRevision;
   $('import-status').textContent = 'Reading report locally…';
   try {
     if (file.size > MAX_REPORT_BYTES) throw new Error('Report exceeds the 32 MiB import limit.');
-    const audit = parseAuditReport(await file.text());
+    const text = await file.text();
+    if (sequence !== importSequence) return;
+    const audit = parseAuditReport(text);
     if (revision !== editRevision) throw new Error('The review changed while the file was loading. Choose the report again when ready.');
     if (hasWork() && !window.confirm('Replace the current review with this report? Download a full review file first if you need to resume it.')) {
       $('import-status').textContent = 'Import cancelled. Current review retained.';
@@ -195,8 +199,8 @@ $('import-report').addEventListener('change', async event => {
     document.dispatchEvent(new window.Event('consent-captures-changed'));
     $('import-status').textContent = [audit.importWarnings?.length ? 'Report reopened. Signals re-decoded; notes and evidence references restored. Imported evidence and decisions are not independently verified.' : 'Report reopened. Signals re-decoded; recorded decisions and notes restored. Imported evidence and decisions are not independently verified.', ...(audit.importWarnings || [])].join(' ');
   } catch (error) {
-    $('import-status').textContent = `Report not imported: ${error.message} Current review retained.`;
-  } finally { event.target.value = ''; }
+    if (sequence === importSequence) $('import-status').textContent = `Report not imported: ${error.message} Current review retained.`;
+  } finally { if (sequence === importSequence) event.target.value = ''; }
 });
 for (const [id, kind] of [['export-audit', 'json'], ['export-markdown', 'md']]) $(id).addEventListener('click', () => {
   if (!comparisonReady) return;
