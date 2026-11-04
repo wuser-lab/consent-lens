@@ -66,5 +66,11 @@ export function captureInstant(localValue, restored) {
   if (!localValue) return '';
   // Preserve milliseconds and the exact instant during DST's repeated hour.
   if (restored && localValue === restored.display) return restored.iso;
-  return new Date(localValue).toISOString();
+  const match = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(?::\d{2})?$/.exec(localValue);
+  const date = new Date(localValue);
+  const expected = localValue.length === 16 ? `${localValue}:00` : localValue;
+  if (!match || !Number.isFinite(date.getTime()) || localCaptureValue(date.toISOString()) !== expected) {
+    throw new Error('Invalid capture time: choose a valid local date and time. Times skipped by daylight saving cannot be used.');
+  }
+  return date.toISOString();
 }
