@@ -86,3 +86,17 @@ test('preserves exact imported instants through the repeated DST hour and millis
     else process.env.TZ = previousTimezone;
   }
 });
+test('rejects nonexistent local capture times instead of silently shifting evidence', () => {
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = 'Europe/Brussels';
+  try {
+    for (const value of ['2026-03-29T02:30', '2026-03-29T02:30:00', '2026-02-30T12:00', 'not a date']) {
+      assert.throws(() => captureInstant(value), /Invalid capture time/);
+    }
+    assert.equal(captureInstant('2026-03-29T01:30'), '2026-03-29T00:30:00.000Z');
+    assert.equal(captureInstant('2026-03-29T03:30:15'), '2026-03-29T01:30:15.000Z');
+  } finally {
+    if (previousTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTimezone;
+  }
+});
